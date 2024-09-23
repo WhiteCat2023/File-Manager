@@ -35,17 +35,9 @@ public class FileAdapter extends ArrayAdapter<File> {
         File file = getItem(position);
 
         TextView fileName = convertView.findViewById(R.id.file_name);
-        Button btnUpload = convertView.findViewById(R.id.btn_upload);
-        Button btnDelete = convertView.findViewById(R.id.btn_delete);
 
         // Set the file name
         fileName.setText(file.getName());
-
-        // Upload button click action
-        btnUpload.setOnClickListener(v -> uploadFile(file));
-
-        // Delete button click action
-        btnDelete.setOnClickListener(v -> deleteFile(file, position));
 
         return convertView;
     }

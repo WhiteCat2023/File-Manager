@@ -18,29 +18,30 @@
         android:paddingEnd="0dp"
         android:textSize="40sp"
         android:layout_marginTop="56dp"/>
-    <LinearLayout
+
+    <com.google.android.material.tabs.TabLayout
         android:id="@+id/innerNav"
+        android:layout_below="@+id/fileTitle"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/fileTitle">
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/internalBtn"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="Internal"/>
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/externalBtn"
+
+        <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="FTP Storage"/>
-    </LinearLayout>
-    <ListView
+            android:text="SERVER"/>
+    </com.google.android.material.tabs.TabLayout>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
         android:layout_below="@+id/innerNav"
-        android:id="@+id/file_list_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
 
 <!--    <androidx.recyclerview.widget.RecyclerView-->
 <!--        android:id="@+id/recyclerView"-->

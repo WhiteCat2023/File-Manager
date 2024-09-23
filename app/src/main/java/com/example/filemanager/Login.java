@@ -66,7 +66,6 @@ public class Login extends AppCompatActivity {
                     try {
                         JSONObject jsonResponse = new JSONObject(response);
                         String status = jsonResponse.getString("status");
-//                        String error = jsonResponse.getString("error");
                         if (status.equals("success")) {
                             Toast.makeText(this, "Login Successfull", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(Login.this, MainActivity.class);
