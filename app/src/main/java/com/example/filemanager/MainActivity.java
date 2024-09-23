@@ -109,9 +109,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Intent intent = new Intent(MainActivity.this, Upload.class);
                     startActivity(intent);
                 });
-
-
-
             }
         });
     }

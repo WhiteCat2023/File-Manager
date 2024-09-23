@@ -1,55 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="10dp"
-    android:gravity="center">
+    android:backgroundTint="#CDC1FF"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:padding="10dp">
 
-       <androidx.cardview.widget.CardView
-           android:layout_width="match_parent"
-           android:layout_height="wrap_content"
-           android:padding="30dp">
-           <RelativeLayout
-               android:layout_width="match_parent"
-               android:layout_height="wrap_content">
-               <ImageView
-                   android:id="@id/fileIcon"
-                   android:layout_width="50dp"
-                   android:layout_height="50dp"
-                   app:srcCompat="@drawable/baseline_folder_24"
-                   android:layout_marginEnd="10dp"
-                   android:layout_centerVertical="true"/>
-               <LinearLayout
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:orientation="vertical"
-                   android:layout_toEndOf="@+id/fileIcon">
-                   <TextView
-                       android:id="@+id/fileName"
-                       android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"
-                       android:text="File Name"
-                       android:layout_marginBottom="20dp"/>
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="30dp"
+        app:cardCornerRadius="10dp">
 
-                   <TextView
-                       android:id="@+id/fileSize"
-                       android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"
-                       android:text="Size: "/>
-                   <TextView
-                       android:id="@+id/Date"
-                       android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"
-                       android:text="Date: "/>
-               </LinearLayout>
-               <androidx.appcompat.widget.Toolbar
-                   android:id="@+id/fileToolbar"
-                   android:layout_width="30dp"
-                   android:layout_height="30dp"
-                   android:layout_alignParentEnd="true"
-                   app:menu="@menu/item_list_utils" />
-           </RelativeLayout>
-       </androidx.cardview.widget.CardView>
+        <RelativeLayout
+            android:id="@+id/back"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/light_lavander">
+
+            <ImageView
+                android:id="@id/fileIcon"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_centerVertical="true"
+                android:layout_margin="10dp"
+                app:srcCompat="@drawable/baseline_folder_24" />
+
+            <LinearLayout
+                android:layout_width="270dp"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/fileIcon"
+                android:orientation="vertical"
+                android:paddingVertical="10dp">
+
+                <TextView
+                    android:id="@+id/fileName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    android:text="File Name" />
+
+                <TextView
+                    android:id="@+id/fileSize"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Size: " />
+
+                <TextView
+                    android:id="@+id/Date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Date: " />
+            </LinearLayout>
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/fileToolbar"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_alignParentEnd="true"
+                android:layout_margin="10dp"
+                app:menu="@menu/item_list_utils" />
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
 </LinearLayout>

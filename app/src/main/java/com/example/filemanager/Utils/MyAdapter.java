@@ -1,6 +1,5 @@
 package com.example.filemanager.Utils;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +15,7 @@ import java.util.List;
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 
-    private List<RecyclerItem> fileItemList;
+    private final List<RecyclerItem> fileItemList;
 
    public MyAdapter(List<RecyclerItem> fileItemList){
        this.fileItemList = fileItemList;
@@ -43,7 +42,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         return fileItemList.size();
     }
 
-    static class MyViewHolder extends RecyclerView.ViewHolder {
+    public static class MyViewHolder extends RecyclerView.ViewHolder {
 
        TextView fileName, fileSize, fileDate;
        ImageView icon;

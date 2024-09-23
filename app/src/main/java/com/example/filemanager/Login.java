@@ -1,5 +1,6 @@
 package com.example.filemanager;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,6 +25,7 @@ public class Login extends AppCompatActivity {
     EditText etEmail, etPassword;
     Button btnLogin;
     RequestQueue requestQueue;
+    ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +42,9 @@ public class Login extends AppCompatActivity {
             String email = etEmail.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
             login(email, password);
+            progressDialog = new ProgressDialog(Login.this);
+            progressDialog.setMessage("Logging in...");
+            progressDialog.show();
         });
     }
 

@@ -34,6 +34,7 @@ android {
 dependencies {
 // FTP Library (Apache Commons Net)
     implementation 'commons-net:commons-net:3.6'
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
     implementation(libs.volley)
     implementation libs.appcompat
     implementation libs.material
@@ -45,4 +46,5 @@ dependencies {
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
+
 }
