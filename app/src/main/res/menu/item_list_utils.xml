@@ -4,6 +4,6 @@
         android:id="@+id/delete"
         android:title="@string/delete"/>
     <item
-        android:id="@+id/upload"
-        android:title="@string/upload"/>
+        android:id="@+id/download"
+        android:title="@string/download"/>
 </menu>

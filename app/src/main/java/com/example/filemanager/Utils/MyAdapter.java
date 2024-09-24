@@ -4,56 +4,112 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.filemanager.R;
-
 import java.util.List;
 
-public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
+public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
+    private final List<RecyclerItem> recyclerItems;
+    private final OnItemClickListener onItemClickListener;
+    private final OnItemActionListener actionListener;
 
-    private final List<RecyclerItem> fileItemList;
+    // Functional interface for handling click events
+    @FunctionalInterface
+    public interface OnItemClickListener {
+        void onItemClick(RecyclerItem item);
+    }
 
-   public MyAdapter(List<RecyclerItem> fileItemList){
-       this.fileItemList = fileItemList;
-   }
+    // Interface for additional actions
+    public interface OnItemActionListener {
+        void onDownloadClick(RecyclerItem item);
+        void onDeleteClick(RecyclerItem item);
+    }
 
+    // Constructor for the adapter
+    public MyAdapter(List<RecyclerItem> recyclerItems, OnItemClickListener onItemClickListener, OnItemActionListener actionListener) {
+        this.recyclerItems = recyclerItems;
+        this.onItemClickListener = onItemClickListener;
+        this.actionListener = actionListener;
+    }
+
+    // Create new views (invoked by the layout manager)
     @NonNull
     @Override
-    public MyAdapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-       View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.file_list_item, parent, false);
-       return new MyViewHolder(itemView);
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.file_list_item, parent, false);
+        return new ViewHolder(view);
     }
 
+    // Replace the contents of a view (invoked by the layout manager)
     @Override
-    public void onBindViewHolder(@NonNull MyAdapter.MyViewHolder holder, int position) {
-        RecyclerItem recyclerItem = fileItemList.get(position);
-        holder.fileName.setText(recyclerItem.getFileName());
-        holder.fileSize.setText(recyclerItem.getFileSize());
-        holder.fileDate.setText(recyclerItem.getFileDate());
-        holder.icon.setImageResource(recyclerItem.isDirectory() ? R.drawable.ic_folder : R.drawable.ic_file);
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        RecyclerItem item = recyclerItems.get(position);
+
+        // Set text fields with file/folder data
+        holder.fileName.setText(item.getFileName());
+        holder.fileSize.setText(item.getFileSize());
+        holder.fileDate.setText(item.getFileDate());
+
+        // Change icon based on whether the item is a directory or a file
+        if (item.isDirectory()) {
+            holder.icon.setImageResource(R.drawable.ic_folder);  // Folder icon for directories
+        } else {
+            holder.icon.setImageResource(R.drawable.ic_file);    // File icon for files
+        }
+
+        // Set up the toolbar click to show the popup menu
+        holder.fileToolbar.setOnClickListener(view -> {
+            PopupMenu popupMenu = new PopupMenu(view.getContext(), holder.fileToolbar);
+            popupMenu.inflate(R.menu.item_list_utils); // Inflate your menu
+
+            // Handle menu item clicks
+            popupMenu.setOnMenuItemClickListener(menuItem -> {
+                if (menuItem.getItemId() == R.id.download) {
+                    actionListener.onDownloadClick(item);  // Handle download
+                    return true;
+                } else if (menuItem.getItemId() == R.id.delete) {
+                    actionListener.onDeleteClick(item);  // Handle delete
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+
+            popupMenu.show();  // Show the popup menu
+        });
+
+        // Handle the click event for the entire item view
+        holder.itemView.setOnClickListener(v -> {
+            if (onItemClickListener != null) {
+                onItemClickListener.onItemClick(item);  // Trigger click event for the item
+            }
+        });
     }
 
+    // Return the size of the dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
-        return fileItemList.size();
+        return recyclerItems.size();
     }
 
-    public static class MyViewHolder extends RecyclerView.ViewHolder {
+    // Provide a reference to the type of views being used (custom ViewHolder)
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView fileName, fileSize, fileDate;
+        ImageView icon;
+        Toolbar fileToolbar;
 
-       TextView fileName, fileSize, fileDate;
-       ImageView icon;
-
-        public MyViewHolder(@NonNull View itemView) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
+            // Initialize views
             fileName = itemView.findViewById(R.id.fileName);
             fileSize = itemView.findViewById(R.id.fileSize);
             fileDate = itemView.findViewById(R.id.Date);
             icon = itemView.findViewById(R.id.fileIcon);
+            fileToolbar = itemView.findViewById(R.id.fileToolbar);
         }
     }
 }
-

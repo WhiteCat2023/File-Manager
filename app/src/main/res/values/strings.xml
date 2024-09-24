@@ -49,4 +49,5 @@
     </string>
     <string name="delete">Delete</string>
     <string name="upload">Upload</string>
+    <string name="download">Download</string>
 </resources>

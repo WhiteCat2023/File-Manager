@@ -4,14 +4,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Tabs.ServerStorage">
+
    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
        android:id="@+id/serverRefreshLayout"
        android:layout_width="match_parent"
        android:layout_height="match_parent">
+
       <androidx.recyclerview.widget.RecyclerView
           android:id="@+id/serverRecyclerView"
           android:layout_width="match_parent"
-          android:layout_height="match_parent"/>
+          android:layout_height="match_parent"
+          android:layout_marginBottom="56dp"/>
+
    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </RelativeLayout>

@@ -1,5 +1,7 @@
 package com.example.filemanager.Utils;
 
+import com.example.filemanager.Fragments.Files;
+
 public class RecyclerItem {
     private final String FileName;
     private final String FileSize;
@@ -24,10 +26,25 @@ public class RecyclerItem {
     }
 
     public String getFileSize() {
-        return "Size: " + FileSize + "MB";
+        return "Size: " + FileSize;
     }
 
     public boolean isDirectory() {
         return isDirectory;
     }
+
+ //   convertSize(Long.parseLong(FileSize))
+//    //Size Conversion
+//    public String convertSize(long sizeInBytes) {
+//
+//        String[] units = {"B", "KB", "MB", "GB"};
+//        int unitIndex = 0;
+//        double size = sizeInBytes;
+//
+//        while(size >= 1024 && unitIndex < units.length - 1){
+//            size /= 1024;
+//            unitIndex++;
+//        }
+//        return String.format("%.2f %s", size, units[unitIndex]);
+//    }
 }
