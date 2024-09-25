@@ -71,12 +71,12 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                 if (menuItem.getItemId() == R.id.download) {
                     actionListener.onDownloadClick(item);  // Handle download
                     return true;
-                } else if (menuItem.getItemId() == R.id.delete) {
+                }
+                if (menuItem.getItemId() == R.id.delete) {
                     actionListener.onDeleteClick(item);  // Handle delete
                     return true;
-                } else {
-                    return false;
                 }
+                return false;
             });
 
             popupMenu.show();  // Show the popup menu
