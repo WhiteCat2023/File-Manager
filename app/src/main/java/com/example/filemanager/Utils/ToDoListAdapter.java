@@ -16,12 +16,13 @@ import java.util.List;
 public class ToDoListAdapter extends RecyclerView.Adapter<ToDoListAdapter.ViewHolder> {
 
     private List<ToDoListItem> tasks;
-//    private OnDeleteClickListener onDeleteClickListener;
+    private OnDeleteClickListener onDeleteClickListener;
 
-    public ToDoListAdapter(List<ToDoListItem> tasks) {
+    public ToDoListAdapter(List<ToDoListItem> tasks, OnDeleteClickListener onDeleteClickListener) {
         this.tasks = tasks;
+        this.onDeleteClickListener = onDeleteClickListener;
     }
-    public interface onDeleteClickListener {
+    public interface OnDeleteClickListener {
         void onDeleteClick(int position);
     }
 
@@ -38,7 +39,12 @@ public class ToDoListAdapter extends RecyclerView.Adapter<ToDoListAdapter.ViewHo
         holder.taskName.setText(item.getTaskName());
         holder.status.setText(item.getStatus());
         holder.date.setText(item.getDate());
-        holder.todoCheckBox.setChecked(false);
+        holder.todoCheckBox.setChecked(item.isChecked());
+        holder.todoCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                onDeleteClickListener.onDeleteClick(position);
+            }
+        });
     }
 
     @Override
