@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,6 +35,8 @@ public class Upload extends AppCompatActivity {
     // UI elements
     private TextView uploadText;
 
+    ImageView uploadBack;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +45,13 @@ public class Upload extends AppCompatActivity {
         // Initialize views
         LinearLayout selectFile = findViewById(R.id.selectFile);
         uploadText = findViewById(R.id.selectFileText);
+        uploadBack = findViewById(R.id.uploadBack);
+
+        // Handle back button click
+        uploadBack.setOnClickListener(v -> {
+            Intent intent = new Intent(Upload.this, MainActivity.class);
+            startActivity(intent);
+        });
 
         selectFile.setOnClickListener(view -> openFileChooser());
 

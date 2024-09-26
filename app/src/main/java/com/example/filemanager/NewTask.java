@@ -1,11 +1,15 @@
 package com.example.filemanager;
 
 import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,11 +23,17 @@ import com.google.android.material.textfield.TextInputEditText;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.sql.Time;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.Objects;
 
 public class NewTask extends AppCompatActivity {
 
+    final Calendar calendar = Calendar.getInstance();
+
+    ImageView todoBack;
     EditText titleInput, descriptionInput;
     TextInputEditText startDateInput, endDateInput;
     Button addTask;
@@ -40,35 +50,53 @@ public class NewTask extends AppCompatActivity {
         descriptionInput = findViewById(R.id.todoDescriptionInput);
         startDateInput = findViewById(R.id.startDate);
         endDateInput = findViewById(R.id.endDate);
+        addTask = findViewById(R.id.addTask);
+        todoBack = findViewById(R.id.todoBack);
+
+        todoBack.setOnClickListener(v -> {
+            Intent intent = new Intent(NewTask.this, MainActivity.class);
+            startActivity(intent);
+        });
 
         requestQueue = Volley.newRequestQueue(this);
 
-        startDateInput.setOnClickListener(v -> {pickDate();});
-        endDateInput.setOnClickListener(v -> {pickDate();});
+        startDateInput.setOnClickListener(v -> {
+            new DatePickerDialog(NewTask.this, new DatePickerDialog.OnDateSetListener() {
+                @Override
+                public void onDateSet(DatePicker datePicker, int year, int month, int dayOfMonth) {
+                    calendar.set(Calendar.YEAR, year);
+                    calendar.set(Calendar.MONTH, month);
+                    calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+
+                    String dateFormat = "MM/dd/yyyy";
+                    SimpleDateFormat sdf = new SimpleDateFormat(dateFormat, Locale.getDefault());
+                    startDateInput.setText(sdf.format(calendar.getTime()));
+                }
+            }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show();
+        });
+        endDateInput.setOnClickListener(v -> {
+            new DatePickerDialog(NewTask.this, new DatePickerDialog.OnDateSetListener() {
+                @Override
+                public void onDateSet(DatePicker datePicker, int year, int month, int dayOfMonth) {
+                    calendar.set(Calendar.YEAR, year);
+                    calendar.set(Calendar.MONTH, month);
+                    calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+
+                    String dateFormat = "MM/dd/yyyy";
+                    SimpleDateFormat sdf = new SimpleDateFormat(dateFormat, Locale.US);
+                    endDateInput.setText(sdf.format(calendar.getTime()));
+                }
+            }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show();
+        });
 
         addTask.setOnClickListener(v -> {addTask();});
     }
-    private void pickDate(){
-        final Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
 
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this, new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker datePicker, int year, int month, int dayOfMonth) {
-                startDateInput.setText((month + 1) + "/" + dayOfMonth + "/" + year);
-            }
-        }, year, month, day);
-
-        datePickerDialog.show();
-
-    }
     private void addTask(){
         String titleInput = this.titleInput.getText().toString().trim();
         String descriptionInput = this.descriptionInput.getText().toString().trim();
-        String startDateInput = Objects.requireNonNull(this.startDateInput.getText()).toString().trim();
-        String endDateInput = Objects.requireNonNull(this.endDateInput.getText()).toString().trim();
+        String startDateInput = this.startDateInput.getText().toString().trim();
+        String endDateInput = this.endDateInput.getText().toString().trim();
 
         if (titleInput.isEmpty() || descriptionInput.isEmpty()){
             Toast.makeText(this, "Please enter a title and description", Toast.LENGTH_SHORT).show();
@@ -81,7 +109,7 @@ public class NewTask extends AppCompatActivity {
             jsonBody.put("startDate", startDateInput);
             jsonBody.put("endDate", endDateInput);
         } catch (JSONException e) {
-            Log.e("Login", "JSON error: " + e.getMessage());
+            Log.e("Todo", "JSON error: " + e.getMessage());
             Toast.makeText(this, "Error creating JSON", Toast.LENGTH_SHORT).show();
         }
 
@@ -92,12 +120,14 @@ public class NewTask extends AppCompatActivity {
                         String status = jsonResponse.getString("status");
                         if (status.equals("success")){
                             Toast.makeText(this, "Task added", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(NewTask.this, MainActivity.class);
+                            startActivity(intent);
                         } else {
-                            String errorMessage = jsonResponse.optString("message", "Authentication failed");
+                            String errorMessage = jsonResponse.optString("message", "Adding task failed");
                             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
                         }
                     }catch (JSONException e){
-                        Log.e("Login", "JSON parsing error: " + e.getMessage());
+                        Log.e("Todo", "JSON parsing error: " + e.getMessage());
                         Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
                     }
                 },

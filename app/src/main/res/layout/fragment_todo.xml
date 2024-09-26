@@ -5,21 +5,49 @@
     android:layout_height="match_parent"
     tools:context=".Fragments.Todo">
     <LinearLayout
-        android:layout_marginTop="56dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingHorizontal="20dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="ToDo"
-            android:textSize="40dp"
-            android:layout_marginBottom="20dp"/>
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/todoRecyclerView"
+            android:textSize="30sp"
+            android:paddingTop="30dp"
+            android:paddingStart="20dp"
+            android:layout_marginTop="56dp"
+            android:layout_marginBottom="20dp"
+            android:layout_alignParentTop="true"/>
+
+        <TextView
+            android:id="@+id/noTask"
+            android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="56dp"/>
+            android:text="No tasks found"
+            android:visibility="gone"
+            android:layout_below="@id/todoRefreshLayout"
+            android:paddingTop="30dp"
+            android:textSize="18sp"/>
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/todoRefreshLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/noTask">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/todoRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingHorizontal="20dp"
+                android:paddingBottom="50dp"
+                android:layout_marginBottom="100dp"/>
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
     </LinearLayout>
+
+
+
 </RelativeLayout>

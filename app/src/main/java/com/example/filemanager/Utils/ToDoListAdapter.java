@@ -38,9 +38,10 @@ public class ToDoListAdapter extends RecyclerView.Adapter<ToDoListAdapter.ViewHo
         ToDoListItem item = tasks.get(position);
         holder.taskName.setText(item.getTaskName());
         holder.status.setText(item.getStatus());
-        holder.date.setText(item.getDate());
-        holder.todoCheckBox.setChecked(item.isChecked());
-        holder.todoCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        holder.startDate.setText(item.getStartDate());
+        holder.endDate.setText(item.getEndDate());
+        holder.isComplete.setChecked(item.isComplete());
+        holder.isComplete.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 onDeleteClickListener.onDeleteClick(position);
             }
@@ -49,20 +50,19 @@ public class ToDoListAdapter extends RecyclerView.Adapter<ToDoListAdapter.ViewHo
 
     @Override
     public int getItemCount() {
-        return tasks.size();
+        return tasks != null ? tasks.size(): 0;
     }
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView taskName;
-        TextView status;
-        TextView date;
-        CheckBox todoCheckBox;
+        TextView taskName, status, startDate, endDate;
+        CheckBox isComplete;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            todoCheckBox = itemView.findViewById(R.id.todoCheckBox);
+            isComplete = itemView.findViewById(R.id.todoCheckBox);
             taskName = itemView.findViewById(R.id.todoTaskName);
             status = itemView.findViewById(R.id.todoTaskStatus);
-            date = itemView.findViewById(R.id.todoTaskDate);
+            startDate = itemView.findViewById(R.id.startDate);
+            endDate = itemView.findViewById(R.id.endDate);
         }
     }
 }

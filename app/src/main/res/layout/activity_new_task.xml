@@ -7,6 +7,11 @@
     android:layout_height="match_parent"
     tools:context=".NewTask"
     android:padding="20dp">
+    <ImageView
+        android:id="@+id/todoBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/baseline_arrow_back_24"/>
     <TextView
         android:id="@+id/todoTitle"
         android:layout_width="match_parent"
@@ -60,13 +65,15 @@
                 android:id="@+id/datePickerLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/todoDescriptionLayout"
-               >
+                android:layout_below="@+id/todoDescriptionLayout">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/startDate"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Start Date"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:cursorVisible="false"
                     android:drawableStart="@drawable/baseline_calendar_month_24"
                     android:drawablePadding="10dp"/>
             </com.google.android.material.textfield.TextInputLayout>
@@ -87,6 +94,9 @@
                     android:layout_height="wrap_content"
                     android:drawableStart="@drawable/baseline_calendar_month_24"
                     android:drawablePadding="10dp"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:cursorVisible="false"
                     android:hint="End Date" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
