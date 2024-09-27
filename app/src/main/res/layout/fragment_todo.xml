@@ -12,7 +12,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="ToDo"
-            android:textSize="30sp"
+            android:textSize="40sp"
             android:paddingTop="30dp"
             android:paddingStart="20dp"
             android:layout_marginTop="56dp"

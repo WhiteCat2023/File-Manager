@@ -8,19 +8,9 @@
         android:checkableBehavior="single">
 
         <item
-            android:id="@+id/nav_dashboard"
-            android:icon="@drawable/baseline_dashboard_24"
-            android:title="Dashboad"/>
-
-        <item
-            android:id="@+id/nav_files"
-            android:icon="@drawable/baseline_folder_24"
-            android:title="Files"/>
-
-        <item
-            android:id="@+id/nav_todo"
-            android:icon="@drawable/baseline_checklist_24"
-            android:title="Todo"/>
+            android:id="@+id/nav_trash"
+            android:icon="@drawable/baseline_delete_24"
+            android:title="Trash"/>
 
     </group>
     <item

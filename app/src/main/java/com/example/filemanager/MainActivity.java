@@ -62,14 +62,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         fragmentManager = getSupportFragmentManager();
 
-        if (savedInstanceState == null) {
-            // Load the initial fragment
-            openFragment(new Dashboard());
-            navigationView.setCheckedItem(R.id.nav_dashboard);
-        }
+
 
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setBackground(null);
+
+        if (savedInstanceState == null) {
+            // Load the initial fragment
+            openFragment(new Dashboard());
+            bottomNavigationView.setSelectedItemId(R.id.bottom_dashboard);
+        }
 
         // Handles the bottom navigation bar
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
@@ -153,12 +155,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
 
         int itemId = item.getItemId();
-        if (itemId == R.id.nav_dashboard){
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Dashboard()).commit();
-        } else if (itemId == R.id.nav_files) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Files()).commit();
-        } else if (itemId == R.id.nav_todo) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Todo()).commit();
+        if (itemId == R.id.nav_trash){
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Trash()).commit();
         } else if (itemId == R.id.nav_signout) {
             progressDialog.setMessage("Signing Out...");
             progressDialog.show();

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/renameInternalItem"
+        android:title="Rename" />
+    <item
+        android:id="@+id/moveToInternalItem"
+        android:title="Move to"/>
+    <item
+        android:id="@+id/deleteInternalItem"
+        android:title="Delete"/>
+</menu>

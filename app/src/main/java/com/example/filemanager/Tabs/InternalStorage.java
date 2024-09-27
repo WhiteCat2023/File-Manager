@@ -1,5 +1,6 @@
 package com.example.filemanager.Tabs;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,8 +17,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.filemanager.R;
+import com.example.filemanager.Utils.InternalStorageAdapter;
 import com.example.filemanager.Utils.ServerStorageAdapter;
 import com.example.filemanager.Utils.RecyclerItem;
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -27,7 +30,7 @@ public class InternalStorage extends Fragment {
 
     private RecyclerView recyclerView;
     private List<RecyclerItem> recyclerItems;
-    private ServerStorageAdapter adapter;
+    private InternalStorageAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
 
     // Define the folder name for internal storage
@@ -44,20 +47,27 @@ public class InternalStorage extends Fragment {
         recyclerItems = new ArrayList<>();
 
         // Initialize adapter
-        adapter = new ServerStorageAdapter(recyclerItems,
+        adapter = new InternalStorageAdapter(recyclerItems,
                 item -> {
                     // Handle item click
                     openFile(item);
                 },
-                new ServerStorageAdapter.OnItemActionListener() {
+                new InternalStorageAdapter.OnItemActionListener() {
                     @Override
-                    public void onDownloadClick(RecyclerItem item) {
-                        // Handle download
+                    public void onRenameClick(RecyclerItem item) {
+                        //Handle Rename
+                        renameFile(item.getFileName());
+                    }
+
+                    @Override
+                    public void onMoveToClick(RecyclerItem item) {
+
                     }
 
                     @Override
                     public void onDeleteClick(RecyclerItem item) {
                         // Handle delete
+                        deleteInternalFile(item.getFileName());
                     }
                 });
         recyclerView.setAdapter(adapter);
@@ -76,6 +86,16 @@ public class InternalStorage extends Fragment {
 
         return view;
     }
+//
+//    CONTINUING THE EMPTY STATE LAYOUT KAY WALA PA NAHUMAN
+//
+//
+//
+//
+//
+//
+//    YES
+
 
     // Method to load downloaded files from internal storage
     private void loadDownloadedFiles() {
@@ -86,6 +106,7 @@ public class InternalStorage extends Fragment {
         if (directory.exists() && directory.isDirectory()) {
             File[] files = directory.listFiles();
             if (files != null && files.length > 0) {
+
                 for (File file : files) {
                     // Add each file to the recyclerItems list
                     recyclerItems.add(new RecyclerItem(file.getName(), formatFileSize(file.length()), "" , false));
@@ -180,6 +201,57 @@ public class InternalStorage extends Fragment {
                 Toast.makeText(requireContext(), "No application available to view this file.", Toast.LENGTH_SHORT).show();
             }
         } else {
+            Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void deleteInternalFile(String fileName) {
+        File file = new File(requireContext().getExternalFilesDir(DOWNLOAD_FOLDER_NAME), fileName);
+
+        if (file.exists()){
+            boolean deleted = file.delete();
+            if (deleted){
+                Toast.makeText(requireContext(), "File deleted successfully.", Toast.LENGTH_SHORT).show();
+                loadDownloadedFiles();
+            }else {
+                Toast.makeText(requireContext(), "Failed to delete file.", Toast.LENGTH_SHORT).show();
+            }
+        }else{
+            Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void renameFile(String filename){
+        View view = LayoutInflater.from(requireContext()).inflate(R.layout.alertdialog_rename, null);
+        TextInputEditText rename = view.findViewById(R.id.renameInternalItem);
+        rename.setText(filename);
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext())
+                .setTitle("Rename File")
+                .setView(view)
+                .setPositiveButton("Rename", (dialog, which) -> {
+                    String newFileName = rename.getText().toString();
+                    if (!newFileName.isEmpty()){
+                        renameInternalFile(filename, newFileName);
+                    }else {
+                        Toast.makeText(requireContext(), "Please enter a new name.", Toast.LENGTH_SHORT).show();
+                    }
+                }).setNegativeButton("Cancel", (dialog, which) -> {
+                    dialog.dismiss();
+                });
+        builder.show();
+    }
+    private void renameInternalFile(String oldName, String newName) {
+        File oldFile = new File(requireContext().getExternalFilesDir(DOWNLOAD_FOLDER_NAME), oldName);
+        File newFile = new File(requireContext().getExternalFilesDir(DOWNLOAD_FOLDER_NAME), newName);
+
+        if (oldFile.exists()){
+            boolean renamed = oldFile.renameTo(newFile);
+            if (renamed){
+                Toast.makeText(requireContext(), "File renamed successfully.", Toast.LENGTH_SHORT).show();
+                loadDownloadedFiles();
+            }else {
+                Toast.makeText(requireContext(), "Failed to rename file.", Toast.LENGTH_SHORT).show();
+            }
+        }else {
             Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
