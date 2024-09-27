@@ -21,7 +21,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.filemanager.R;
-import com.example.filemanager.Utils.MyAdapter;
+import com.example.filemanager.Utils.ServerStorageAdapter;
 import com.example.filemanager.Utils.RecyclerItem;
 
 import org.json.JSONArray;
@@ -33,19 +33,28 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 public class ServerStorage extends Fragment {
     // Initialize variables
     private List<RecyclerItem> recyclerItems;
-    private MyAdapter adapter;
+    private ServerStorageAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
 
     // Hostinger API endpoint (replace with your actual endpoint)
     private static final String HOSTINGER_API_URL = "https://skcalamba.scarlet2.io/android_api/hostinger_api.php";
     private static final String DOWNLOAD_URL = "https://skcalamba.scarlet2.io/android_api/public_html/myfolder/";
+    private static final String FILE_DELETE_URL = "https://skcalamba.scarlet2.io/android_api/delete_file.php";
 
     // Define the folder name for internal storage
     private static final String DOWNLOAD_FOLDER_NAME = "MyDownloads";
+
+    private static final String MY_FOLDER_PATH = "./android_api/public_html/myfolder/";
+
+    private String currentPath = "";
+    private Stack<String> folderStack;
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -61,11 +70,15 @@ public class ServerStorage extends Fragment {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerItems = new ArrayList<>();
-        adapter = new MyAdapter(recyclerItems,
+        adapter = new ServerStorageAdapter(recyclerItems,
                 item -> {
-                    // Handle item click
+                    if (item.isDirectory()) {
+                        // If the clicked item is a folder, fetch its contents
+                        currentPath += "/" + item.getFileName();
+                        fetchFilesFromHostinger(currentPath);
+                    }
                 },
-                new MyAdapter.OnItemActionListener() {
+                new ServerStorageAdapter.OnItemActionListener() {
                     @Override
                     public void onDownloadClick(RecyclerItem item) {
                         downloadFile(item);  // Handle download
@@ -85,17 +98,39 @@ public class ServerStorage extends Fragment {
         createDownloadFolder();
 
         // Fetch initial files
-        fetchFilesFromHostinger();
+        fetchFilesFromHostinger("");
         fetchCurrentDownloads(); // Fetch current downloads
 
         // Set up refresh listener
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            fetchFilesFromHostinger();
+            fetchFilesFromHostinger(currentPath);
             fetchCurrentDownloads(); // Refresh current downloads
         });
 
+
         return view;
     }
+    public void goBack() {
+        if (!folderStack.isEmpty()) {
+            currentPath = folderStack.pop(); // Go back to the previous folder
+            loadFolder(currentPath); // Load the previous folder
+        } else {
+            // Handle the case when there are no previous folders (e.g., show a message)
+        }
+    }
+
+    public void loadFolder(String folder) {
+        // Only add to the stack if we're not going back to the root
+        if (!currentPath.isEmpty()) {
+            folderStack.push(currentPath);
+        }
+        currentPath = folder;
+
+        // Fetch the contents of the new folder
+        fetchFilesFromHostinger(currentPath); // Load the folder's contents
+    }
+
+
 
     // Method to create the download folder in internal storage
     private void createDownloadFolder() {
@@ -110,8 +145,9 @@ public class ServerStorage extends Fragment {
         }
     }
 
+
     // Fetch files from the Hostinger API
-    private void fetchFilesFromHostinger() {
+    private void fetchFilesFromHostinger(String folderPath) {
         // Show refresh animation
         swipeRefreshLayout.setRefreshing(true);
 
@@ -139,7 +175,9 @@ public class ServerStorage extends Fragment {
                                 boolean isDirectory = fileObject.getBoolean("isDirectory");
 
                                 // Add the file to the list
-                                recyclerItems.add(new RecyclerItem(name, formatFileSize(size.length()), date, isDirectory));
+                                if (!name.equals("..") && !name.equals(".")){
+                                    recyclerItems.add(new RecyclerItem(name, formatFileSize(size.length()), date, isDirectory));
+                                }
                             }
 
                             adapter.notifyDataSetChanged(); // Notify adapter of new data
@@ -168,7 +206,7 @@ public class ServerStorage extends Fragment {
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
                 params.put("auth_token", "bf4edef043130d19e11048aab68d4c512b62d2de1d000514b65410876e9a96f2"); // Replace with your actual token
-                params.put("path", "/public_html/android_api/public_html/myfolder");
+                params.put("path", MY_FOLDER_PATH  + folderPath);
                 return params;
             }
         };

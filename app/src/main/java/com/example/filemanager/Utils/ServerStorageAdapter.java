@@ -7,12 +7,11 @@ import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.filemanager.R;
 import java.util.List;
 
-public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
+public class ServerStorageAdapter extends RecyclerView.Adapter<ServerStorageAdapter.ViewHolder> {
     private final List<RecyclerItem> recyclerItems;
     private final OnItemClickListener onItemClickListener;
     private final OnItemActionListener actionListener;
@@ -30,7 +29,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     }
 
     // Constructor for the adapter
-    public MyAdapter(List<RecyclerItem> recyclerItems, OnItemClickListener onItemClickListener, OnItemActionListener actionListener) {
+    public ServerStorageAdapter(List<RecyclerItem> recyclerItems, OnItemClickListener onItemClickListener, OnItemActionListener actionListener) {
         this.recyclerItems = recyclerItems;
         this.onItemClickListener = onItemClickListener;
         this.actionListener = actionListener;
@@ -56,31 +55,47 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
         // Change icon based on whether the item is a directory or a file
         if (item.isDirectory()) {
-            holder.icon.setImageResource(R.drawable.ic_folder);  // Folder icon for directories
+            holder.icon.setImageResource(R.drawable.ic_folder);
+            holder.fileToolbar.setOnClickListener(view -> {
+                PopupMenu popupMenu = new PopupMenu(view.getContext(), holder.fileToolbar);
+                popupMenu.inflate(R.menu.server_item_directory);
+
+                // Handle menu item clicks
+                popupMenu.setOnMenuItemClickListener(menuItem -> {
+                    if (menuItem.getItemId() == R.id.delete) {
+                        actionListener.onDeleteClick(item);  // Handle delete
+                        return true;
+                    }
+                    return false;
+                });
+                popupMenu.show();
+            });
         } else {
-            holder.icon.setImageResource(R.drawable.ic_file);    // File icon for files
+            holder.icon.setImageResource(R.drawable.ic_file);
+            // Set up the toolbar click to show the popup menu
+            holder.fileToolbar.setOnClickListener(view -> {
+                PopupMenu popupMenu = new PopupMenu(view.getContext(), holder.fileToolbar);
+                popupMenu.inflate(R.menu.item_list_utils); // Inflate your menu
+
+                // Handle menu item clicks
+                popupMenu.setOnMenuItemClickListener(menuItem -> {
+                    if (menuItem.getItemId() == R.id.download) {
+                        actionListener.onDownloadClick(item);  // Handle download
+                        return true;
+                    }
+                    if (menuItem.getItemId() == R.id.delete) {
+                        actionListener.onDeleteClick(item);  // Handle delete
+                        return true;
+                    }
+                    return false;
+                });
+
+                popupMenu.show(); // File icon for files
+            });
         }
 
-        // Set up the toolbar click to show the popup menu
-        holder.fileToolbar.setOnClickListener(view -> {
-            PopupMenu popupMenu = new PopupMenu(view.getContext(), holder.fileToolbar);
-            popupMenu.inflate(R.menu.item_list_utils); // Inflate your menu
+         // Show the popup menu
 
-            // Handle menu item clicks
-            popupMenu.setOnMenuItemClickListener(menuItem -> {
-                if (menuItem.getItemId() == R.id.download) {
-                    actionListener.onDownloadClick(item);  // Handle download
-                    return true;
-                }
-                if (menuItem.getItemId() == R.id.delete) {
-                    actionListener.onDeleteClick(item);  // Handle delete
-                    return true;
-                }
-                return false;
-            });
-
-            popupMenu.show();  // Show the popup menu
-        });
 
         // Handle the click event for the entire item view
         holder.itemView.setOnClickListener(v -> {
@@ -100,7 +115,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView fileName, fileSize, fileDate;
         ImageView icon;
-        Toolbar fileToolbar;
+        ImageView fileToolbar;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);

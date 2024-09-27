@@ -50,6 +50,7 @@ public class Login extends AppCompatActivity {
 
     private void login(String email, String password) {
         if (email.isEmpty() || password.isEmpty()) {
+            progressDialog.dismiss();
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -60,6 +61,7 @@ public class Login extends AppCompatActivity {
             jsonBody.put("password", password);
         } catch (JSONException e) {
             Log.e("Login", "JSON error: " + e.getMessage());
+            progressDialog.dismiss();
             Toast.makeText(this, "Error creating JSON", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -76,15 +78,18 @@ public class Login extends AppCompatActivity {
                             Intent intent = new Intent(Login.this, MainActivity.class);
                             startActivity(intent);
                         } else {
+                            progressDialog.dismiss();
                             String errorMessage = jsonResponse.optString("message", "Authentication failed");
                             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
                         }
                     } catch (JSONException e) {
+                        progressDialog.dismiss();
                         Log.e("Login", "JSON parsing error: " + e.getMessage());
                         Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
                     }
                 },
                 error -> {
+                    progressDialog.dismiss();
                     Log.e("Login", "Volley error: " + error.getMessage(), error);
                     Toast.makeText(this, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                 }) {

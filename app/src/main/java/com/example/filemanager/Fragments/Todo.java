@@ -171,7 +171,8 @@ public class Todo extends Fragment implements ToDoListAdapter.OnDeleteClickListe
         if (toDoListItem.isEmpty()) {
             // Reload the RecyclerView to handle an empty state
             adapter.notifyDataSetChanged();
-
+            noTask.setVisibility(View.VISIBLE);
+            refreshLayout.setVisibility(View.GONE);
             Toast.makeText(getContext(), "All tasks completed", Toast.LENGTH_SHORT).show();
             Log.d("Todo", "After Removal, Item Count: " + toDoListItem.size());
         } else {

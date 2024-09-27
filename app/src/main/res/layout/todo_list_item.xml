@@ -11,7 +11,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="5dp">
+            android:paddingVertical="10dp">
             <CheckBox
                 android:id="@+id/todoCheckBox"
                 android:layout_width="wrap_content"
@@ -51,11 +51,12 @@
                         android:text="End Date: "/>
                 </LinearLayout>
             </LinearLayout>
-            <androidx.appcompat.widget.Toolbar
+            <ImageView
+                android:id="@+id/optionMenu"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                app:menu="@menu/nav_menu"/>
+                app:srcCompat="@drawable/baseline_more_vert_24"
+                android:layout_alignParentEnd="true"/>
         </RelativeLayout>
     </androidx.cardview.widget.CardView>
 

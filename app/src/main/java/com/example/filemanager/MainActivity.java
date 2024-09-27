@@ -24,15 +24,16 @@ import androidx.fragment.app.FragmentTransaction;
 import com.example.filemanager.Fragments.Dashboard;
 import com.example.filemanager.Fragments.Files;
 import com.example.filemanager.Fragments.Todo;
+import com.example.filemanager.Tabs.ServerStorage;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    //Initializing variables
+    // Initializing variables
     DrawerLayout drawerLayout;
     FloatingActionButton fab;
     BottomNavigationView bottomNavigationView;
@@ -44,30 +45,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Assigning components to variables
+        // Assigning components to variables
         fab = findViewById(R.id.fab);
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         drawerLayout = findViewById(R.id.drawer_layout);
-        //Adds the hamburger icon
+        // Adds the hamburger icon
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open_nav, R.string.close_nav);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
-        //Adds the navigation drawer
+        // Adds the navigation drawer
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        if (savedInstanceState == null){
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Dashboard()).commit();
+        fragmentManager = getSupportFragmentManager();
+
+        if (savedInstanceState == null) {
+            // Load the initial fragment
+            openFragment(new Dashboard());
             navigationView.setCheckedItem(R.id.nav_dashboard);
         }
 
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setBackground(null);
 
-        //Handles the bottom navigation bar
+        // Handles the bottom navigation bar
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -86,30 +90,44 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        fragmentManager = getSupportFragmentManager();
-        openFragment(new Dashboard());
-
+        // Floating Action Button logic
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(MainActivity.this);
-                View options = LayoutInflater.from(MainActivity.this).inflate(R.layout.bottomsheet_nav, null);
-                bottomSheetDialog.setContentView(options);
-                bottomSheetDialog.show();
-
-                LinearLayout newTask = options.findViewById(R.id.newTask);
-                LinearLayout uploadFile = options.findViewById(R.id.uploadFile);
-                //Directs you to the new task page
-                newTask.setOnClickListener(View -> {
-                    Intent intent = new Intent(MainActivity.this, NewTask.class);
-                    startActivity(intent);
-                });
-                //Directs you to upload page
-                uploadFile.setOnClickListener(View ->{
-                    Intent intent = new Intent(MainActivity.this, Upload.class);
-                    startActivity(intent);
-                });
+                showBottomSheetDialog();
             }
+        });
+    }
+
+    private void showBottomSheetDialog() {
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(MainActivity.this);
+        View options = LayoutInflater.from(MainActivity.this).inflate(R.layout.bottomsheet_nav, null);
+        bottomSheetDialog.setContentView(options);
+        bottomSheetDialog.show();
+
+        LinearLayout newTask = options.findViewById(R.id.newTask);
+        LinearLayout uploadFile = options.findViewById(R.id.uploadFile);
+        LinearLayout newFolder = options.findViewById(R.id.newFolder);
+
+        // Directs you to the new task page
+        newTask.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, NewTask.class);
+            startActivity(intent);
+        });
+
+        // Directs you to upload page
+        uploadFile.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, Upload.class);
+            startActivity(intent);
+        });
+
+        // Directs you to the new folder page
+        newFolder.setOnClickListener(view -> {
+            BottomSheetDialog newFolderDialog = new BottomSheetDialog(MainActivity.this);
+            View newFolderOptions = LayoutInflater.from(MainActivity.this).inflate(R.layout.bottomsheet_new_folder, null);
+            newFolderDialog.setContentView(newFolderOptions);
+            bottomSheetDialog.dismiss(); // Close the first bottom sheet
+            newFolderDialog.show();
         });
     }
 
@@ -129,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         editor.apply();
     }
 
-    //Handles the navigation drawer
+    // Handles the navigation drawer
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
@@ -151,20 +169,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    //Handles the back button
+    // Handles the back button
     @Override
     public void onBackPressed() {
-        //it checks if the drawer is open and closes it
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)){
-            drawerLayout.closeDrawer(GravityCompat.START);
-        }else {
-            super.onBackPressed();
+        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (fragment instanceof ServerStorage) {
+            ((ServerStorage) fragment).goBack(); // Call goBack method in ServerStorage
+        } else {
+            super.onBackPressed(); // Use default back action
         }
-        finishAffinity();
+
+        // Check if the drawer is open and close it
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        }
     }
 
-    //Removes the session and logs the user out
-    private void logout(){
+
+    // Removes the session and logs the user out
+    private void logout() {
         SharedPreferences sharedPreferences = getSharedPreferences("session", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
@@ -175,21 +198,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         finish();
     }
 
-    //Opens a fragment
-    private void openFragment(Fragment fragment){
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.fragment_container, fragment);
-        transaction.commit();
+    // Opens a fragment
+    private void openFragment(Fragment fragment) {
+        if (fragment != null) {
+            FragmentTransaction transaction = fragmentManager.beginTransaction();
+            transaction.replace(R.id.fragment_container, fragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
+        }
     }
 
-    //Returns a short toast
-    public void messageShort(String message){
+
+    // Returns a short toast
+    public void messageShort(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    //Returns a long toast
-    public  void messageLong(String message){
+    // Returns a long toast
+    public void messageLong(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
-
 }
