@@ -9,6 +9,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.filemanager.R;
+
+import java.io.File;
 import java.util.List;
 
 public class InternalStorageAdapter extends RecyclerView.Adapter<InternalStorageAdapter.ViewHolder> {
@@ -109,6 +111,7 @@ public class InternalStorageAdapter extends RecyclerView.Adapter<InternalStorage
             }
         });
     }
+
 
     // Return the size of the dataset (invoked by the layout manager)
     @Override

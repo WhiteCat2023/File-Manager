@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
@@ -40,6 +41,7 @@ public class ServerStorage extends Fragment {
     private List<RecyclerItem> recyclerItems;
     private ServerStorageAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private ViewStub serverEmptyStateStub;
 
     // Hostinger API endpoint (replace with your actual endpoint)
     private static final String HOSTINGER_API_URL = "https://skcalamba.scarlet2.io/android_api/hostinger_api.php";
@@ -60,6 +62,8 @@ public class ServerStorage extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout
         View view = inflater.inflate(R.layout.fragment_server_storage, container, false);
+
+        serverEmptyStateStub = view.findViewById(R.id.serverEmptyStateStub);
 
         // Initialize RecyclerView
         RecyclerView recyclerView = view.findViewById(R.id.serverRecyclerView);
@@ -116,6 +120,7 @@ public class ServerStorage extends Fragment {
             loadFolder(currentPath); // Load the previous folder
         } else {
             // Handle the case when there are no previous folders (e.g., show a message)
+            Toast.makeText(requireContext(), "No more folders to go back to", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -181,10 +186,18 @@ public class ServerStorage extends Fragment {
                             }
 
                             adapter.notifyDataSetChanged(); // Notify adapter of new data
+
+                            if (serverEmptyStateStub.getParent() != null) {
+                                serverEmptyStateStub.setVisibility(View.GONE);
+                            }
                         } else {
                             // Handle error
                             String errorMessage = jsonObject.optString("message", "Error fetching files");
                             Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show();
+
+                            if (serverEmptyStateStub != null && serverEmptyStateStub.getVisibility() != View.VISIBLE) {
+                                serverEmptyStateStub.setVisibility(View.VISIBLE);
+                            }
                         }
                     } catch (JSONException e) {
                         // Handle JSON parsing error

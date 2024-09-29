@@ -9,6 +9,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
         <TextView
+            android:id="@+id/todoTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="ToDo"
@@ -19,22 +20,11 @@
             android:layout_marginBottom="20dp"
             android:layout_alignParentTop="true"/>
 
-        <TextView
-            android:id="@+id/noTask"
-            android:gravity="center"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="No tasks found"
-            android:visibility="gone"
-            android:layout_below="@id/todoRefreshLayout"
-            android:paddingTop="30dp"
-            android:textSize="18sp"/>
-
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/todoRefreshLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@id/noTask">
+            android:layout_below="@id/todoTitle">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/todoRecyclerView"

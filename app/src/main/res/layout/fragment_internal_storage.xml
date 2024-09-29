@@ -14,13 +14,6 @@
             android:id="@+id/internalRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
-        
-        <ViewStub
-            android:id="@+id/emptyStateStub"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"
-            android:layout="@layout/empty_state_layout"/>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

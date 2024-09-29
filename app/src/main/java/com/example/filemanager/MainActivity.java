@@ -1,5 +1,8 @@
 package com.example.filemanager;
 
+import static androidx.core.content.ContentProviderCompat.requireContext;
+
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -30,6 +33,9 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.textfield.TextInputEditText;
+
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -39,6 +45,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     BottomNavigationView bottomNavigationView;
     Toolbar toolbar;
     FragmentManager fragmentManager;
+
+    private static final String DOWNLOAD_FOLDER_NAME = "MyDownloads";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,7 +138,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             newFolderDialog.setContentView(newFolderOptions);
             bottomSheetDialog.dismiss(); // Close the first bottom sheet
             newFolderDialog.show();
+
+            LinearLayout internalNewFolder = newFolderOptions.findViewById(R.id.internalNewFolder);
+            LinearLayout serverNewFolder = newFolderOptions.findViewById(R.id.serverNewFolder);
+
+            internalNewFolder.setOnClickListener(v -> {
+                newFolderInInternalStorage();
+            });
         });
+    }
+
+    public void newFolderInInternalStorage(){
+        View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.alertdialog_input_folder, null);
+        TextInputEditText newFolderName = view.findViewById(R.id.folderNameInput);
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this)
+                .setTitle("Create Folder")
+                .setView(view)
+                .setPositiveButton("Create", (dialog, which) -> {
+                    String newFolderNameString = newFolderName.getText().toString().trim();
+
+                    if(!newFolderNameString.isEmpty()){
+                        File directory = new File(MainActivity.this.getExternalFilesDir(null), DOWNLOAD_FOLDER_NAME);
+                        File newFolder = new File(directory, newFolderNameString);
+
+                        if(!newFolder.exists()){
+                            boolean createdNewFolder = newFolder.mkdir();
+                            if (createdNewFolder) {
+                                Toast.makeText(MainActivity.this, "Folder created successfully", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(MainActivity.this, "Failed to create folder", Toast.LENGTH_SHORT).show();
+                            }
+                        }else {
+                            Toast.makeText(MainActivity.this, "Folder already exists", Toast.LENGTH_SHORT).show();
+                        }
+                    }else {
+                        Toast.makeText(MainActivity.this, "Please enter a folder name", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    dialog.dismiss();
+                });
+        builder.show();
     }
 
     @Override

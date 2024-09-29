@@ -18,7 +18,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.filemanager.R;
 import com.example.filemanager.Utils.InternalStorageAdapter;
-import com.example.filemanager.Utils.ServerStorageAdapter;
 import com.example.filemanager.Utils.RecyclerItem;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -35,11 +34,13 @@ public class InternalStorage extends Fragment {
 
     // Define the folder name for internal storage
     private static final String DOWNLOAD_FOLDER_NAME = "MyDownloads";
+    private File currentDirectory;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout
         View view = inflater.inflate(R.layout.fragment_internal_storage, container, false);
+
 
         // Initialize RecyclerView
         recyclerView = view.findViewById(R.id.internalRecyclerView);
@@ -49,8 +50,12 @@ public class InternalStorage extends Fragment {
         // Initialize adapter
         adapter = new InternalStorageAdapter(recyclerItems,
                 item -> {
-                    // Handle item click
-                    openFile(item);
+                    // Check if the item is a directory or a file
+                    if (item.isDirectory()) {
+                        openDirectory(item.getFileName()); // Call openDirectory if it's a directory
+                    } else {
+                        openFile(item); // Call openFile if it's a file
+                    }
                 },
                 new InternalStorageAdapter.OnItemActionListener() {
                     @Override
@@ -76,51 +81,81 @@ public class InternalStorage extends Fragment {
         swipeRefreshLayout = view.findViewById(R.id.internalRefreshLayout);
 
         // Load files from internal storage
-        loadDownloadedFiles();
+        currentDirectory = new File(requireContext().getExternalFilesDir(null), DOWNLOAD_FOLDER_NAME);
+        loadFilesFromDirectory(currentDirectory);
+
 
         // Set up refresh listener
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            loadDownloadedFiles();
+            loadFilesFromDirectory(currentDirectory);
             swipeRefreshLayout.setRefreshing(false);
         });
 
         return view;
     }
-//
-//    CONTINUING THE EMPTY STATE LAYOUT KAY WALA PA NAHUMAN
-//
-//
-//
-//
-//
-//
-//    YES
+    // Method to navigate into a directory
+    private void openDirectory(String directoryName) {
+        File newDirectory = new File(currentDirectory, directoryName);
+        if (newDirectory.exists() && newDirectory.isDirectory()) {
+            currentDirectory = newDirectory;
+            loadFilesFromDirectory(currentDirectory);
+        } else {
+            Toast.makeText(requireContext(), "Cannot open directory.", Toast.LENGTH_SHORT).show();
+        }
+    }
+    // Method to load files and directories from the specified directory
+    private void loadFilesFromDirectory(File directory) {
+        recyclerItems.clear();
 
-
-    // Method to load downloaded files from internal storage
-    private void loadDownloadedFiles() {
-        recyclerItems.clear(); // Clear the list to avoid duplicates
-
-        // Use the app-specific directory for the downloads folder
-        File directory = new File(requireContext().getExternalFilesDir(null), DOWNLOAD_FOLDER_NAME);
         if (directory.exists() && directory.isDirectory()) {
             File[] files = directory.listFiles();
             if (files != null && files.length > 0) {
-
                 for (File file : files) {
-                    // Add each file to the recyclerItems list
-                    recyclerItems.add(new RecyclerItem(file.getName(), formatFileSize(file.length()), "" , false));
+                    boolean isDirectory = file.isDirectory();
+                    recyclerItems.add(new RecyclerItem(file.getName(), formatFileSize(file.length()), "", isDirectory));
                 }
-                adapter.notifyDataSetChanged(); // Notify adapter of new data
+
+                // Notify adapter of new data
+                adapter.notifyDataSetChanged();
             } else {
                 Log.e("InternalStorage", "No files found in the directory.");
-                Toast.makeText(requireContext(), "No files found in the download folder.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "No files found.", Toast.LENGTH_SHORT).show();
+                adapter.notifyDataSetChanged();
             }
         } else {
-            Log.e("InternalStorage", "Download folder does not exist.");
-            Toast.makeText(requireContext(), "Download folder does not exist.", Toast.LENGTH_SHORT).show();
+            Log.e("InternalStorage", "Directory does not exist.");
+            Toast.makeText(requireContext(), "Directory does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
+
+//    // Method to load downloaded files from internal storage
+//    private void loadDownloadedFiles() {
+//        recyclerItems.clear();
+//
+//        // Use the app-specific directory for the downloads folder
+//        File directory = new File(requireContext().getExternalFilesDir(null), DOWNLOAD_FOLDER_NAME);
+//        if (directory.exists() && directory.isDirectory()) {
+//            File[] files = directory.listFiles();
+//            if (files != null && files.length > 0) {
+//
+//                for (File file : files) {
+//                    // Add each file to the recyclerItems list
+//                    recyclerItems.add(new RecyclerItem(file.getName(), formatFileSize(file.length()), "" , false));
+//                }
+//
+//                // Notify adapter of new data
+//                adapter.notifyDataSetChanged();
+//
+//            } else {
+//                Log.e("InternalStorage", "No files found in the directory.");
+//                Toast.makeText(requireContext(), "No files found in the download folder.", Toast.LENGTH_SHORT).show();
+//
+//            }
+//        } else {
+//            Log.e("InternalStorage", "Download folder does not exist.");
+//            Toast.makeText(requireContext(), "Download folder does not exist.", Toast.LENGTH_SHORT).show();
+//        }
+//    }
 
     // Method to format file size into a readable format
     private String formatFileSize(long size) {
@@ -204,24 +239,39 @@ public class InternalStorage extends Fragment {
             Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
-
     private void deleteInternalFile(String fileName) {
-        File file = new File(requireContext().getExternalFilesDir(DOWNLOAD_FOLDER_NAME), fileName);
+        File file = new File(currentDirectory, fileName);
 
-        if (file.exists()){
+        if (file.exists()) {
             boolean deleted = file.delete();
-            if (deleted){
+            if (deleted) {
                 Toast.makeText(requireContext(), "File deleted successfully.", Toast.LENGTH_SHORT).show();
-                loadDownloadedFiles();
-            }else {
+                loadFilesFromDirectory(currentDirectory); // Update here
+            } else {
                 Toast.makeText(requireContext(), "Failed to delete file.", Toast.LENGTH_SHORT).show();
             }
-        }else{
+        } else {
             Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
+
+//    private void deleteInternalFile(String fileName) {
+//        File file = new File(requireContext().getExternalFilesDir(DOWNLOAD_FOLDER_NAME), fileName);
+//
+//        if (file.exists()){
+//            boolean deleted = file.delete();
+//            if (deleted){
+//                Toast.makeText(requireContext(), "File deleted successfully.", Toast.LENGTH_SHORT).show();
+//                loadDownloadedFiles();
+//            }else {
+//                Toast.makeText(requireContext(), "Failed to delete file.", Toast.LENGTH_SHORT).show();
+//            }
+//        }else{
+//            Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
+//        }
+//    }
     private void renameFile(String filename){
-        View view = LayoutInflater.from(requireContext()).inflate(R.layout.alertdialog_rename, null);
+        View view = LayoutInflater.from(requireContext()).inflate(R.layout.alertdialog_input, null);
         TextInputEditText rename = view.findViewById(R.id.renameInternalItem);
         rename.setText(filename);
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext())
@@ -240,19 +290,35 @@ public class InternalStorage extends Fragment {
         builder.show();
     }
     private void renameInternalFile(String oldName, String newName) {
-        File oldFile = new File(requireContext().getExternalFilesDir(DOWNLOAD_FOLDER_NAME), oldName);
-        File newFile = new File(requireContext().getExternalFilesDir(DOWNLOAD_FOLDER_NAME), newName);
+        File oldFile = new File(currentDirectory, oldName);
+        File newFile = new File(currentDirectory, newName);
 
-        if (oldFile.exists()){
+        if (oldFile.exists()) {
             boolean renamed = oldFile.renameTo(newFile);
-            if (renamed){
+            if (renamed) {
                 Toast.makeText(requireContext(), "File renamed successfully.", Toast.LENGTH_SHORT).show();
-                loadDownloadedFiles();
-            }else {
+                loadFilesFromDirectory(currentDirectory); // Update here
+            } else {
                 Toast.makeText(requireContext(), "Failed to rename file.", Toast.LENGTH_SHORT).show();
             }
-        }else {
+        } else {
             Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
+//    private void renameInternalFile(String oldName, String newName) {
+//        File oldFile = new File(requireContext().getExternalFilesDir(DOWNLOAD_FOLDER_NAME), oldName);
+//        File newFile = new File(requireContext().getExternalFilesDir(DOWNLOAD_FOLDER_NAME), newName);
+//
+//        if (oldFile.exists()){
+//            boolean renamed = oldFile.renameTo(newFile);
+//            if (renamed){
+//                Toast.makeText(requireContext(), "File renamed successfully.", Toast.LENGTH_SHORT).show();
+//                loadDownloadedFiles();
+//            }else {
+//                Toast.makeText(requireContext(), "Failed to rename file.", Toast.LENGTH_SHORT).show();
+//            }
+//        }else {
+//            Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
+//        }
+//    }
 }
