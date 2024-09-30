@@ -3,7 +3,28 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Tabs.InternalStorage">
+
+    <ImageView
+        android:id="@+id/internalImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        app:srcCompat="@drawable/no_files"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone"/>
+    <TextView
+        android:id="@+id/internalTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No Files Founds"
+        android:gravity="center"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="150dp"
+        android:textSize="20sp"
+        android:visibility="gone"/>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/internalRefreshLayout"

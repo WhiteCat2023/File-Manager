@@ -27,6 +27,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.example.filemanager.Fragments.Dashboard;
 import com.example.filemanager.Fragments.Files;
 import com.example.filemanager.Fragments.Todo;
+import com.example.filemanager.Tabs.InternalStorage;
 import com.example.filemanager.Tabs.ServerStorage;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -77,8 +78,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         if (savedInstanceState == null) {
             // Load the initial fragment
-            openFragment(new Dashboard());
-            bottomNavigationView.setSelectedItemId(R.id.bottom_dashboard);
+            openFragment(new Files());
+            bottomNavigationView.setSelectedItemId(R.id.bottom_files);
         }
 
         // Handles the bottom navigation bar
@@ -86,10 +87,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 int itemId = item.getItemId();
-                if (itemId == R.id.bottom_dashboard){
-                    openFragment(new Dashboard());
-                    return true;
-                } else if (itemId == R.id.bottom_files) {
+
+//                Under construction
+////                if (itemId == R.id.bottom_dashboard){
+////                    openFragment(new Dashboard());
+////                    return true;
+//                }
+
+
+                if (itemId == R.id.bottom_files) {
                     openFragment(new Files());
                     return true;
                 } else if (itemId == R.id.bottom_todo) {
@@ -218,18 +224,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     // Handles the back button
     @Override
     public void onBackPressed() {
-        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-        if (fragment instanceof ServerStorage) {
-            ((ServerStorage) fragment).goBack(); // Call goBack method in ServerStorage
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+
+        if (currentFragment instanceof InternalStorage) {
+            InternalStorage internalStorageFragment = (InternalStorage) currentFragment;
+            internalStorageFragment.goBack();
+        } else if (currentFragment instanceof ServerStorage) {
+            ServerStorage serverStorageFragment = (ServerStorage) currentFragment;
+            serverStorageFragment.goBack();
         } else {
-            super.onBackPressed(); // Use default back action
+            super.onBackPressed();
         }
 
-        // Check if the drawer is open and close it
+        // Check if the navigation drawer is open
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
         }
     }
+
 
 
     // Removes the session and logs the user out

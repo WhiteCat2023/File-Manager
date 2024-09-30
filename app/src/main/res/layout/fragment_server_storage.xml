@@ -3,8 +3,27 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Tabs.ServerStorage"
     android:id="@+id/ServerStorage">
+   <ImageView
+       android:id="@+id/externalImageView"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       app:srcCompat="@drawable/no_files"
+       android:layout_centerHorizontal="true"
+       android:layout_centerVertical="true"
+       android:visibility="gone"/>
+   <TextView
+       android:id="@+id/externalTextView"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:text="No Files Found"
+       android:gravity="center"
+       android:layout_alignParentBottom="true"
+       android:layout_marginBottom="150dp"
+       android:textSize="20sp"
+       android:visibility="gone"/>
 
    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
        android:id="@+id/serverRefreshLayout"
@@ -17,11 +36,7 @@
           android:layout_height="wrap_content"/>
 
    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-   <ViewStub
-       android:id="@+id/serverEmptyStateStub"
-       android:layout_width="match_parent"
-       android:layout_height="match_parent"
-       android:layout="@layout/empty_state_layout"/>
+
 
 
 </RelativeLayout>

@@ -9,7 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewStub;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.android.volley.Request;
@@ -20,7 +20,7 @@ import com.android.volley.toolbox.Volley;
 import com.example.filemanager.R;
 import com.example.filemanager.Utils.ToDoListAdapter;
 import com.example.filemanager.Utils.ToDoListItem;
-import org.json.JSONArray;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.ArrayList;
@@ -33,6 +33,8 @@ public class Todo extends Fragment implements ToDoListAdapter.OnDeleteClickListe
     private ToDoListAdapter adapter;
     private RequestQueue requestQueue;
     private SwipeRefreshLayout refreshLayout;
+    private ImageView emptyStateImageView;
+    private TextView emptyStateTextView;
 
     private static final String todoUrl = "https://skcalamba.scarlet2.io/android_api/todo/get_task.php";
 
@@ -41,6 +43,9 @@ public class Todo extends Fragment implements ToDoListAdapter.OnDeleteClickListe
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_todo, container, false);
 
+        // Initialize views
+        emptyStateImageView = view.findViewById(R.id.todoEmptyStateImageView);
+        emptyStateTextView = view.findViewById(R.id.todoEmptyStateTextView);
         recyclerView = view.findViewById(R.id.todoRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
@@ -52,19 +57,21 @@ public class Todo extends Fragment implements ToDoListAdapter.OnDeleteClickListe
         // Initialize the request queue
         requestQueue = Volley.newRequestQueue(requireContext());
 
-        fetchToDoItems();
-
+        // Initialize refresh layout and fetch items
         refreshLayout = view.findViewById(R.id.todoRefreshLayout);
-        refreshLayout.setOnRefreshListener(() -> {
-            fetchToDoItems();
-            refreshLayout.setRefreshing(false);
-        });
+        refreshLayout.setOnRefreshListener(this::fetchToDoItems);
+        fetchToDoItems();
 
         return view;
     }
 
     // Fetching the ToDo items from the server
     private void fetchToDoItems() {
+        if (refreshLayout != null) {
+            refreshLayout.setRefreshing(true); // Start the refresh animation
+        }
+
+        // Create a JSON array request
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.POST,
                 todoUrl,
@@ -88,22 +95,45 @@ public class Todo extends Fragment implements ToDoListAdapter.OnDeleteClickListe
                             toDoListItem.add(item);
                         }
                         adapter.notifyDataSetChanged();
-
-                        Log.d("Todo", "Item Count: " + toDoListItem.size());
+                        updateEmptyStateVisibility();
                     } catch (JSONException e) {
                         handleError("Error parsing JSON: " + e.getMessage());
+                    } finally {
+                        if (refreshLayout != null) {
+                            refreshLayout.setRefreshing(false);
+                        }
                     }
                 },
                 error -> {
                     handleError("No Task Found");
+                    if (refreshLayout != null) {
+                        refreshLayout.setRefreshing(false);
+                    }
                 }
         );
         requestQueue.add(request);
     }
 
+    private void updateEmptyStateVisibility() {
+        if (toDoListItem.isEmpty()) {
+            emptyStateImageView.setVisibility(View.VISIBLE);
+            emptyStateTextView.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+        } else {
+            emptyStateImageView.setVisibility(View.GONE);
+            emptyStateTextView.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+        }
+        Log.d("Todo", "Item Count: " + toDoListItem.size());
+    }
+
     private void handleError(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
         Log.e("Todo", message);
+        emptyStateImageView.setVisibility(View.VISIBLE);
+        emptyStateTextView.setVisibility(View.VISIBLE);
+        emptyStateTextView.setText(message);
+        recyclerView.setVisibility(View.GONE);
     }
 
     private void markTaskAsComplete(int taskId) {
@@ -118,9 +148,8 @@ public class Todo extends Fragment implements ToDoListAdapter.OnDeleteClickListe
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, markCompleteUrl, postData,
                 response -> Log.d("Todo", "Task marked as complete on server"),
-                error -> {
-                    handleError("Error updating task");
-                });
+                error -> handleError("Error updating task")
+        );
 
         requestQueue.add(request);
     }

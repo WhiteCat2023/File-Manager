@@ -3,11 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Fragments.Todo">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_marginBottom="80dp">
         <TextView
             android:id="@+id/todoTitle"
             android:layout_width="match_parent"
@@ -19,22 +21,46 @@
             android:layout_marginTop="56dp"
             android:layout_marginBottom="20dp"
             android:layout_alignParentTop="true"/>
-
-        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-            android:id="@+id/todoRefreshLayout"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_below="@id/todoTitle">
+            android:layout_height="match_parent">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/todoRecyclerView"
+            <ImageView
+                android:id="@+id/todoEmptyStateImageView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/purple_notes"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true"
+                android:visibility="gone"/>
+
+            <TextView
+                android:id="@+id/todoEmptyStateTextView"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:paddingHorizontal="20dp"
-                android:paddingBottom="50dp"
-                android:layout_marginBottom="100dp"/>
+                android:layout_height="wrap_content"
+                android:text="No Task for the moment"
+                android:gravity="center"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="150dp"
+                android:textSize="20sp"
+                android:visibility="gone"/>
 
-        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+                android:id="@+id/todoRefreshLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/todoRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingHorizontal="20dp"
+                    android:paddingBottom="50dp"
+                    android:layout_marginBottom="100dp"/>
+
+            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        </RelativeLayout>
+
 
     </LinearLayout>
 

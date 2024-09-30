@@ -8,8 +8,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -24,6 +27,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 public class InternalStorage extends Fragment {
 
@@ -31,21 +35,27 @@ public class InternalStorage extends Fragment {
     private List<RecyclerItem> recyclerItems;
     private InternalStorageAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
-
+    private ImageView emptyStateImageView;
+    private TextView emptyStateTextView;
     // Define the folder name for internal storage
     private static final String DOWNLOAD_FOLDER_NAME = "MyDownloads";
     private File currentDirectory;
+
+    private Stack<String> folderStack;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout
         View view = inflater.inflate(R.layout.fragment_internal_storage, container, false);
 
-
+        emptyStateImageView = view.findViewById(R.id.internalImageView);
+        emptyStateTextView = view.findViewById(R.id.internalTextView);
         // Initialize RecyclerView
         recyclerView = view.findViewById(R.id.internalRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerItems = new ArrayList<>();
+
+        folderStack = new Stack<>();
 
         // Initialize adapter
         adapter = new InternalStorageAdapter(recyclerItems,
@@ -97,6 +107,7 @@ public class InternalStorage extends Fragment {
     private void openDirectory(String directoryName) {
         File newDirectory = new File(currentDirectory, directoryName);
         if (newDirectory.exists() && newDirectory.isDirectory()) {
+            folderStack.push(currentDirectory.getAbsolutePath());
             currentDirectory = newDirectory;
             loadFilesFromDirectory(currentDirectory);
         } else {
@@ -111,51 +122,31 @@ public class InternalStorage extends Fragment {
             File[] files = directory.listFiles();
             if (files != null && files.length > 0) {
                 for (File file : files) {
+                    emptyStateImageView.setVisibility(View.GONE);
+                    emptyStateTextView.setVisibility(View.GONE);
+                    recyclerView.setVisibility(View.VISIBLE);
                     boolean isDirectory = file.isDirectory();
                     recyclerItems.add(new RecyclerItem(file.getName(), formatFileSize(file.length()), "", isDirectory));
+
                 }
 
                 // Notify adapter of new data
                 adapter.notifyDataSetChanged();
             } else {
                 Log.e("InternalStorage", "No files found in the directory.");
-                Toast.makeText(requireContext(), "No files found.", Toast.LENGTH_SHORT).show();
+                emptyStateImageView.setVisibility(View.VISIBLE);
+                emptyStateTextView.setVisibility(View.VISIBLE);
+                recyclerView.setVisibility(View.GONE);
                 adapter.notifyDataSetChanged();
             }
         } else {
+            emptyStateImageView.setVisibility(View.VISIBLE);
+            emptyStateTextView.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
             Log.e("InternalStorage", "Directory does not exist.");
             Toast.makeText(requireContext(), "Directory does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
-
-//    // Method to load downloaded files from internal storage
-//    private void loadDownloadedFiles() {
-//        recyclerItems.clear();
-//
-//        // Use the app-specific directory for the downloads folder
-//        File directory = new File(requireContext().getExternalFilesDir(null), DOWNLOAD_FOLDER_NAME);
-//        if (directory.exists() && directory.isDirectory()) {
-//            File[] files = directory.listFiles();
-//            if (files != null && files.length > 0) {
-//
-//                for (File file : files) {
-//                    // Add each file to the recyclerItems list
-//                    recyclerItems.add(new RecyclerItem(file.getName(), formatFileSize(file.length()), "" , false));
-//                }
-//
-//                // Notify adapter of new data
-//                adapter.notifyDataSetChanged();
-//
-//            } else {
-//                Log.e("InternalStorage", "No files found in the directory.");
-//                Toast.makeText(requireContext(), "No files found in the download folder.", Toast.LENGTH_SHORT).show();
-//
-//            }
-//        } else {
-//            Log.e("InternalStorage", "Download folder does not exist.");
-//            Toast.makeText(requireContext(), "Download folder does not exist.", Toast.LENGTH_SHORT).show();
-//        }
-//    }
 
     // Method to format file size into a readable format
     private String formatFileSize(long size) {
@@ -255,21 +246,6 @@ public class InternalStorage extends Fragment {
         }
     }
 
-//    private void deleteInternalFile(String fileName) {
-//        File file = new File(requireContext().getExternalFilesDir(DOWNLOAD_FOLDER_NAME), fileName);
-//
-//        if (file.exists()){
-//            boolean deleted = file.delete();
-//            if (deleted){
-//                Toast.makeText(requireContext(), "File deleted successfully.", Toast.LENGTH_SHORT).show();
-//                loadDownloadedFiles();
-//            }else {
-//                Toast.makeText(requireContext(), "Failed to delete file.", Toast.LENGTH_SHORT).show();
-//            }
-//        }else{
-//            Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
-//        }
-//    }
     private void renameFile(String filename){
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.alertdialog_input, null);
         TextInputEditText rename = view.findViewById(R.id.renameInternalItem);
@@ -305,20 +281,31 @@ public class InternalStorage extends Fragment {
             Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
-//    private void renameInternalFile(String oldName, String newName) {
-//        File oldFile = new File(requireContext().getExternalFilesDir(DOWNLOAD_FOLDER_NAME), oldName);
-//        File newFile = new File(requireContext().getExternalFilesDir(DOWNLOAD_FOLDER_NAME), newName);
-//
-//        if (oldFile.exists()){
-//            boolean renamed = oldFile.renameTo(newFile);
-//            if (renamed){
-//                Toast.makeText(requireContext(), "File renamed successfully.", Toast.LENGTH_SHORT).show();
-//                loadDownloadedFiles();
-//            }else {
-//                Toast.makeText(requireContext(), "Failed to rename file.", Toast.LENGTH_SHORT).show();
-//            }
-//        }else {
-//            Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
-//        }
-//    }
+    public void goBack() {
+        if (!folderStack.isEmpty()) {
+           String previousPath = folderStack.pop();
+           currentDirectory = new File(previousPath);
+           loadFilesFromDirectory(currentDirectory);
+        } else {
+            // Handle the case when there are no previous folders (e.g., show a message)
+            Log.e("InternalStorage", "No previous folders to go back to.");
+        }
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Handle back press specifically in the fragment
+        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (!folderStack.isEmpty()) {
+                    goBack();
+                } else {
+                    requireActivity().onBackPressed();
+                }
+            }
+        });
+    }
+
 }

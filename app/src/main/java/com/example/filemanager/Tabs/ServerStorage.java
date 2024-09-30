@@ -1,5 +1,6 @@
 package com.example.filemanager.Tabs;
 
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.database.Cursor;
@@ -10,6 +11,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
@@ -19,6 +22,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.filemanager.R;
@@ -41,7 +45,9 @@ public class ServerStorage extends Fragment {
     private List<RecyclerItem> recyclerItems;
     private ServerStorageAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private ViewStub serverEmptyStateStub;
+    private ImageView emptyStateImageView;
+    private TextView emptyStateTextView;
+    private RecyclerView recyclerView;
 
     // Hostinger API endpoint (replace with your actual endpoint)
     private static final String HOSTINGER_API_URL = "https://skcalamba.scarlet2.io/android_api/hostinger_api.php";
@@ -53,6 +59,7 @@ public class ServerStorage extends Fragment {
 
     private static final String MY_FOLDER_PATH = "./android_api/public_html/myfolder/";
 
+    private String auth = "bf4edef043130d19e11048aab68d4c512b62d2de1d000514b65410876e9a96f2";
     private String currentPath = "";
     private Stack<String> folderStack;
 
@@ -63,10 +70,12 @@ public class ServerStorage extends Fragment {
         // Inflate the layout
         View view = inflater.inflate(R.layout.fragment_server_storage, container, false);
 
-        serverEmptyStateStub = view.findViewById(R.id.serverEmptyStateStub);
+        emptyStateImageView = view.findViewById(R.id.externalImageView);
+        emptyStateTextView = view.findViewById(R.id.externalTextView);
 
+        folderStack = new Stack<>();
         // Initialize RecyclerView
-        RecyclerView recyclerView = view.findViewById(R.id.serverRecyclerView);
+        recyclerView = view.findViewById(R.id.serverRecyclerView);
         if (recyclerView == null) {
             Log.e("ServerStorage", "RecyclerView is null, check the ID in the layout.");
             return view; // Prevent further errors
@@ -90,7 +99,13 @@ public class ServerStorage extends Fragment {
 
                     @Override
                     public void onDeleteClick(RecyclerItem item) {
-                        // Handle delete
+                        new AlertDialog.Builder(requireContext())
+                                .setTitle("Delete Confirmation")
+                                .setMessage("Are you sure you want to delete this file?" + item.getFileName())
+                                .setPositiveButton("Yes", (dialog, which) -> {
+                                    fileDeletionRequest(item.getFileName());
+                                }).setNegativeButton("No", null)
+                                .show();
                     }
                 });
         recyclerView.setAdapter(adapter);
@@ -117,7 +132,10 @@ public class ServerStorage extends Fragment {
     public void goBack() {
         if (!folderStack.isEmpty()) {
             currentPath = folderStack.pop(); // Go back to the previous folder
-            loadFolder(currentPath); // Load the previous folder
+            loadFolder(currentPath);
+            emptyStateImageView.setVisibility(View.VISIBLE);
+            emptyStateTextView.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE); // Load the previous folder
         } else {
             // Handle the case when there are no previous folders (e.g., show a message)
             Toast.makeText(requireContext(), "No more folders to go back to", Toast.LENGTH_SHORT).show();
@@ -154,7 +172,9 @@ public class ServerStorage extends Fragment {
     // Fetch files from the Hostinger API
     private void fetchFilesFromHostinger(String folderPath) {
         // Show refresh animation
-        swipeRefreshLayout.setRefreshing(true);
+        if (swipeRefreshLayout != null){
+            swipeRefreshLayout.setRefreshing(true);
+        }
 
         // Create a Volley request queue
         RequestQueue queue = Volley.newRequestQueue(requireContext());
@@ -186,23 +206,18 @@ public class ServerStorage extends Fragment {
                             }
 
                             adapter.notifyDataSetChanged(); // Notify adapter of new data
-
-                            if (serverEmptyStateStub.getParent() != null) {
-                                serverEmptyStateStub.setVisibility(View.GONE);
-                            }
+                            updateEmptyStateVisibility();
                         } else {
                             // Handle error
                             String errorMessage = jsonObject.optString("message", "Error fetching files");
                             Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show();
-
-                            if (serverEmptyStateStub != null && serverEmptyStateStub.getVisibility() != View.VISIBLE) {
-                                serverEmptyStateStub.setVisibility(View.VISIBLE);
-                            }
+                            emptyStateImageView.setVisibility(View.VISIBLE);
+                            emptyStateImageView.setVisibility(View.VISIBLE);
+                            recyclerView.setVisibility(View.GONE);
                         }
                     } catch (JSONException e) {
                         // Handle JSON parsing error
-                        Log.e("ServerStorage", "JSON parsing error: " + e.getMessage());
-                        Toast.makeText(requireContext(), "Error parsing response", Toast.LENGTH_SHORT).show();
+                        handleError("Error parsing JSON" + e.getMessage());
                     } finally {
                         // Stop refresh animation
                         swipeRefreshLayout.setRefreshing(false);
@@ -210,15 +225,14 @@ public class ServerStorage extends Fragment {
                 },
                 error -> {
                     // Handle network error
-                    Log.e("ServerStorage", "Volley error: " + (error.getMessage() != null ? error.getMessage() : "Unknown error"));
-                    Toast.makeText(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
-                    swipeRefreshLayout.setRefreshing(false); // Stop refresh animation in case of error
+                    swipeRefreshLayout.setRefreshing(false);
+                    handleError("Network Error" + error.getMessage());
                 }) {
             // Add parameters to the request
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
-                params.put("auth_token", "bf4edef043130d19e11048aab68d4c512b62d2de1d000514b65410876e9a96f2"); // Replace with your actual token
+                params.put("auth_token", auth); // Replace with your actual token
                 params.put("path", MY_FOLDER_PATH  + folderPath);
                 return params;
             }
@@ -226,6 +240,27 @@ public class ServerStorage extends Fragment {
 
         // Add the request to the queue
         queue.add(request);
+    }
+    private void updateEmptyStateVisibility() {
+        if (recyclerItems.isEmpty()) {
+            emptyStateImageView.setVisibility(View.VISIBLE);
+            emptyStateTextView.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+        } else {
+            emptyStateImageView.setVisibility(View.GONE);
+            emptyStateTextView.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+        }
+        Log.d("Todo", "Item Count: " + recyclerItems.size());
+    }
+
+    private void handleError(String message) {
+        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+        Log.e("Todo", message);
+        emptyStateImageView.setVisibility(View.VISIBLE);
+        emptyStateTextView.setVisibility(View.VISIBLE);
+        emptyStateTextView.setText(message);
+        recyclerView.setVisibility(View.GONE);
     }
 
     // Method to download the file
@@ -326,6 +361,51 @@ public class ServerStorage extends Fragment {
             Toast.makeText(requireContext(), "Download Manager not available", Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void fileDeletionRequest(String fileName) {
+        RequestQueue queue = Volley.newRequestQueue(requireContext());
+
+        String path = MY_FOLDER_PATH + currentPath + "/" + fileName;
+        JSONObject itemParams = new JSONObject();
+
+        try {
+            itemParams.put("auth_token", auth);
+            itemParams.put("file_name", fileName);
+            itemParams.put("action", "request_permission");
+            itemParams.put("current_path", path);
+        } catch (JSONException e) {
+            Log.e("ServerStorage", "Error creating JSON object for deletion request: " + e.getMessage());
+            Toast.makeText(requireContext(), "Error preparing deletion request", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Log.d("ServerStorage", "Sending deletion request with parameters: " + itemParams.toString());
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.POST,
+                FILE_DELETE_URL,
+                itemParams,
+                response -> {
+                    if (response != null) {
+                        try {
+                            Toast.makeText(requireContext(), "File deletion request sent", Toast.LENGTH_SHORT).show();
+                        } catch (Exception e) {
+                            Log.e("ServerStorage", "Error parsing response: " + e.getMessage());
+                            Toast.makeText(requireContext(), "Error processing response", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "No response from server", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    Log.e("ServerStorage", "Error sending deletion request: " + error.getMessage());
+                    Toast.makeText(requireContext(), "Error Sending Deletion Request", Toast.LENGTH_SHORT).show();
+                }
+        );
+
+        queue.add(request);
+    }
+
     // Method to format file size into a readable format
     private String formatFileSize(long size) {
         if (size <= 0) return "0 KB";
