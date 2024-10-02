@@ -11,6 +11,10 @@
             android:id="@+id/nav_trash"
             android:icon="@drawable/baseline_delete_24"
             android:title="Trash"/>
+        <item
+            android:id="@+id/nav_feedback"
+            android:icon="@drawable/baseline_feedback_24"
+            android:title="Feedback"/>
 
     </group>
     <item

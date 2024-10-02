@@ -6,13 +6,22 @@ public class RecyclerItem {
     private final String FileName;
     private final String FileSize;
     private final String FileDate;
+    private final String OriginalFilePath;
+
 
     private final boolean isDirectory;
-    public RecyclerItem(String FileName, String FileSize, String FileDate, boolean isDirectory){
+    public RecyclerItem(
+            String FileName,
+            String FileSize,
+            String FileDate,
+            boolean isDirectory,
+            String OriginalFilePath){
+
         this.FileName = FileName;
         this.FileSize = FileSize;
         this.FileDate = FileDate;
         this.isDirectory = isDirectory;
+        this.OriginalFilePath = OriginalFilePath;
     }
 
     //Getters
@@ -33,18 +42,8 @@ public class RecyclerItem {
         return isDirectory;
     }
 
- //   convertSize(Long.parseLong(FileSize))
-//    //Size Conversion
-//    public String convertSize(long sizeInBytes) {
-//
-//        String[] units = {"B", "KB", "MB", "GB"};
-//        int unitIndex = 0;
-//        double size = sizeInBytes;
-//
-//        while(size >= 1024 && unitIndex < units.length - 1){
-//            size /= 1024;
-//            unitIndex++;
-//        }
-//        return String.format("%.2f %s", size, units[unitIndex]);
-//    }
+    public String getOriginalFilePath() {
+        return OriginalFilePath;
+    }
+
 }

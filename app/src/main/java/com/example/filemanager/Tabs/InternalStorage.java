@@ -20,17 +20,25 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.filemanager.R;
+import com.example.filemanager.Trash;
 import com.example.filemanager.Utils.InternalStorageAdapter;
 import com.example.filemanager.Utils.RecyclerItem;
 import com.google.android.material.textfield.TextInputEditText;
 
+import org.json.JSONObject;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
 public class InternalStorage extends Fragment {
 
+    private static final String TRASH_FOLDER_NAME = "Trash";
     private RecyclerView recyclerView;
     private List<RecyclerItem> recyclerItems;
     private InternalStorageAdapter adapter;
@@ -40,9 +48,11 @@ public class InternalStorage extends Fragment {
     // Define the folder name for internal storage
     private static final String DOWNLOAD_FOLDER_NAME = "MyDownloads";
     private File currentDirectory;
+    private List<RecyclerItem> deletedItems;
 
     private Stack<String> folderStack;
 
+    private static final String METADATA_FILE_NAME = "trash_metadata.json";
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout
@@ -126,7 +136,7 @@ public class InternalStorage extends Fragment {
                     emptyStateTextView.setVisibility(View.GONE);
                     recyclerView.setVisibility(View.VISIBLE);
                     boolean isDirectory = file.isDirectory();
-                    recyclerItems.add(new RecyclerItem(file.getName(), formatFileSize(file.length()), "", isDirectory));
+                    recyclerItems.add(new RecyclerItem(file.getName(), formatFileSize(file.length()), "", isDirectory, file.getAbsolutePath()));
 
                 }
 
@@ -230,21 +240,64 @@ public class InternalStorage extends Fragment {
             Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
+
+    // Method to move a file to the Trash folder along with its original path
     private void deleteInternalFile(String fileName) {
         File file = new File(currentDirectory, fileName);
 
         if (file.exists()) {
-            boolean deleted = file.delete();
-            if (deleted) {
-                Toast.makeText(requireContext(), "File deleted successfully.", Toast.LENGTH_SHORT).show();
-                loadFilesFromDirectory(currentDirectory); // Update here
+
+            Log.d("Move to trash", "Moving " + file.getAbsolutePath() + " to Trash");
+
+            // Move the file to the Trash folder
+            File trashFolder = new File(requireContext().getExternalFilesDir(null), "Trash");
+            if (!trashFolder.exists()) {
+                boolean folderCreated = trashFolder.mkdir();  // Create Trash folder if it doesn't exist
+                if (!folderCreated) {
+                    Toast.makeText(requireContext(), "Failed to create Trash folder.", Toast.LENGTH_SHORT).show();
+                    return; // Stop if the Trash folder couldn't be created
+                }
+            }
+
+            // Create a new File object for the destination in the Trash folder
+            File destination = new File(trashFolder, file.getName());
+
+            // Create the Metadata folder if it doesn't exist
+            File metadataFolder = new File(requireContext().getExternalFilesDir(null), "Metadata");
+            if (!metadataFolder.exists()) {
+                boolean metadataFolderCreated = metadataFolder.mkdir();  // Create Metadata folder if it doesn't exist
+                if (!metadataFolderCreated) {
+                    Toast.makeText(requireContext(), "Failed to create Metadata folder.", Toast.LENGTH_SHORT).show();
+                    return; // Stop if the Metadata folder couldn't be created
+                }
+            }
+
+            // Store the original file path in a metadata file inside the Metadata folder
+            File metadataFile = new File(metadataFolder, file.getName() + ".json");
+            try {
+                FileWriter writer = new FileWriter(metadataFile);
+                writer.write("{\"originalPath\":\"" + file.getAbsolutePath() + "\"}");
+                writer.flush();
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(requireContext(), "Failed to save metadata.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Attempt to move the file to the Trash folder
+            boolean moved = file.renameTo(destination);
+            if (moved) {
+                Toast.makeText(requireContext(), "File moved to Trash.", Toast.LENGTH_SHORT).show();
+                loadFilesFromDirectory(currentDirectory); // Reload files after moving
             } else {
-                Toast.makeText(requireContext(), "Failed to delete file.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Failed to move file to Trash.", Toast.LENGTH_SHORT).show();
             }
         } else {
             Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
+
 
     private void renameFile(String filename){
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.alertdialog_input, null);

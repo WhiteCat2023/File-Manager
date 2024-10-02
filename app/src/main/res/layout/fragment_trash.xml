@@ -5,6 +5,7 @@
     android:layout_height="match_parent"
     tools:context=".Trash">
     <TextView
+        android:id="@+id/trashTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="start"
@@ -14,4 +15,13 @@
         android:textSize="40sp"
         android:layout_marginTop="56dp"
         android:text="Trash"/>
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/trashTextView">
+        <androidx.recyclerview.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/trashRecyclerView"/>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </RelativeLayout>

@@ -3,6 +3,7 @@ package com.example.filemanager.Tabs;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -63,6 +64,8 @@ public class ServerStorage extends Fragment {
     private String currentPath = "";
     private Stack<String> folderStack;
 
+    private static final String SHARED_PREF_NAME = "session";
+    private static final String SESSION_EMAIL = "user_email";
 
 
     @Override
@@ -199,9 +202,11 @@ public class ServerStorage extends Fragment {
                                 String date = fileObject.optString("date", "N/A"); // Add default if missing
                                 boolean isDirectory = fileObject.getBoolean("isDirectory");
 
+                                String fullPath = folderPath.isEmpty() ? name : folderPath + "/" + name;
+
                                 // Add the file to the list
                                 if (!name.equals("..") && !name.equals(".")){
-                                    recyclerItems.add(new RecyclerItem(name, formatFileSize(size.length()), date, isDirectory));
+                                    recyclerItems.add(new RecyclerItem(name, formatFileSize(size.length()), date, isDirectory, fullPath));
                                 }
                             }
 
@@ -289,6 +294,7 @@ public class ServerStorage extends Fragment {
             DownloadManager downloadManager = (DownloadManager) requireContext().getSystemService(Context.DOWNLOAD_SERVICE);
             if (downloadManager != null) {
                 long downloadId = downloadManager.enqueue(request); // Store the download ID
+                Log.d("ServerStorage", "Download started for: " + item.getFileName() + " at " + downloadFile.getAbsolutePath());
                 Toast.makeText(requireContext(), "Downloading: " + downloadFile.getName(), Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(requireContext(), "Download Manager not available", Toast.LENGTH_SHORT).show();
@@ -344,7 +350,7 @@ public class ServerStorage extends Fragment {
                         long id = cursor.getLong(idIndex);
 
                         // Create a RecyclerItem for the current download
-                        currentDownloads.add(new RecyclerItem(title, "Downloading...", "", false)); // Assuming isDirectory is false for files
+                        currentDownloads.add(new RecyclerItem(title, "Downloading...", "", false, ""));
                     } else {
                         Log.e("ServerStorage", "Column index not found. Check column names.");
                     }
@@ -365,6 +371,9 @@ public class ServerStorage extends Fragment {
     private void fileDeletionRequest(String fileName) {
         RequestQueue queue = Volley.newRequestQueue(requireContext());
 
+        SharedPreferences sharedPreferences = requireContext().getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        String userEmail = sharedPreferences.getString(SESSION_EMAIL, "0");
+
         String path = MY_FOLDER_PATH + currentPath + "/" + fileName;
         JSONObject itemParams = new JSONObject();
 
@@ -373,6 +382,7 @@ public class ServerStorage extends Fragment {
             itemParams.put("file_name", fileName);
             itemParams.put("action", "request_permission");
             itemParams.put("current_path", path);
+            itemParams.put("user_email", userEmail);
         } catch (JSONException e) {
             Log.e("ServerStorage", "Error creating JSON object for deletion request: " + e.getMessage());
             Toast.makeText(requireContext(), "Error preparing deletion request", Toast.LENGTH_SHORT).show();

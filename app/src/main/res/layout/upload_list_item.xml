@@ -30,7 +30,14 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="20dp"
                     android:text="File Name" />
-
+                <ProgressBar
+                    android:id="@+id/progress_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    android:progressTint="@color/purple"
+                    android:progressBackgroundTint="@color/white"
+                    style="?android:attr/progressBarStyleHorizontal"/>
                 <TextView
                     android:id="@+id/uploadFileSize"
                     android:layout_width="wrap_content"

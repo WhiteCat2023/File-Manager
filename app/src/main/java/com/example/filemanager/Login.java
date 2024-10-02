@@ -2,6 +2,7 @@ package com.example.filemanager;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -14,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -26,6 +26,12 @@ public class Login extends AppCompatActivity {
     Button btnLogin;
     RequestQueue requestQueue;
     ProgressDialog progressDialog;
+
+    private static final String SHARED_PREF_NAME = "session";
+    private static final String SESSION_EMAIL = "user_email";
+    private static final String SESSION_TOKEN = "user_token";
+    private static final String SESSION_POSITION = "user_position";
+    private static final String SESSION_NAME = "user_name";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,12 +77,28 @@ public class Login extends AppCompatActivity {
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 response -> {
                     try {
+                        Log.d("Login", "Response: " + response); // Log the raw response for debugging
                         JSONObject jsonResponse = new JSONObject(response);
                         String status = jsonResponse.getString("status");
+                        String userToken = jsonResponse.getString("user_id");
+                        String userPosition = jsonResponse.getString("user_position");
+                        String userName = jsonResponse.getString("user_name");
+                        String userEmail = jsonResponse.getString("user_email");
+
                         if (status.equals("success")) {
-                            Toast.makeText(this, "Login Successfull", Toast.LENGTH_SHORT).show();
+                            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putString(SESSION_EMAIL, userEmail);
+                            editor.putString(SESSION_TOKEN, userToken);
+                            editor.putString(SESSION_POSITION, userPosition);
+                            editor.putString(SESSION_NAME, userName);
+                            editor.apply();
+
+                            progressDialog.dismiss();
+                            Toast.makeText(this, "Login Successful", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(Login.this, MainActivity.class);
                             startActivity(intent);
+                            finish();
                         } else {
                             progressDialog.dismiss();
                             String errorMessage = jsonResponse.optString("message", "Authentication failed");
@@ -85,12 +107,16 @@ public class Login extends AppCompatActivity {
                     } catch (JSONException e) {
                         progressDialog.dismiss();
                         Log.e("Login", "JSON parsing error: " + e.getMessage());
-                        Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Login failed: Invalid server response", Toast.LENGTH_SHORT).show();
                     }
                 },
                 error -> {
                     progressDialog.dismiss();
-                    Log.e("Login", "Volley error: " + error.getMessage(), error);
+                    Log.e("Login", "Volley error: " + error.toString());
+                    if (error.networkResponse != null) {
+                        Log.e("Login", "Status Code: " + error.networkResponse.statusCode);
+                        Log.e("Login", "Response Data: " + new String(error.networkResponse.data));
+                    }
                     Toast.makeText(this, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                 }) {
             @Override

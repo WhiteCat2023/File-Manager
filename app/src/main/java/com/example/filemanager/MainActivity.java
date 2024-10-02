@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -25,6 +26,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.filemanager.Fragments.Dashboard;
+import com.example.filemanager.Fragments.Feedback;
 import com.example.filemanager.Fragments.Files;
 import com.example.filemanager.Fragments.Todo;
 import com.example.filemanager.Tabs.InternalStorage;
@@ -49,6 +51,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private static final String DOWNLOAD_FOLDER_NAME = "MyDownloads";
 
+    private static final String SHARED_PREF_NAME = "session";
+    private static final String SESSION_EMAIL = "user_email";
+    private static final String SESSION_POSITION = "user_position";
+    private static final String SESSION_NAME = "user_name";
+
+    TextView headerName, headerEmail, headerPosition;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +80,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         fragmentManager = getSupportFragmentManager();
 
+        View headerView = navigationView.getHeaderView(0);
+        headerName = headerView.findViewById(R.id.headerName);
+        headerEmail = headerView.findViewById(R.id.headerEmail);
+        headerPosition = headerView.findViewById(R.id.headerPosition);
 
 
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
@@ -81,6 +94,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             openFragment(new Files());
             bottomNavigationView.setSelectedItemId(R.id.bottom_files);
         }
+
+        loadUserData();
 
         // Handles the bottom navigation bar
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
@@ -113,6 +128,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 showBottomSheetDialog();
             }
         });
+    }
+
+    private void loadUserData(){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
+        String userEmail = sharedPreferences.getString(SESSION_EMAIL, "Email not found");
+        String userName = sharedPreferences.getString(SESSION_NAME, "Name not found");
+        String userPosition = sharedPreferences.getString(SESSION_POSITION, "Position not found");
+
+        headerName.setText(userName);
+        headerEmail.setText(userEmail);
+        headerPosition.setText(userPosition);
     }
 
     private void showBottomSheetDialog() {
@@ -211,6 +237,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int itemId = item.getItemId();
         if (itemId == R.id.nav_trash){
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Trash()).commit();
+        } else if(itemId == R.id.nav_feedback){
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Feedback()).commit();
         } else if (itemId == R.id.nav_signout) {
             progressDialog.setMessage("Signing Out...");
             progressDialog.show();
