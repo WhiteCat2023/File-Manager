@@ -5,11 +5,14 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.filemanager.Tabs.InternalStorage;
 import com.example.filemanager.Utils.DeletedItemAdapter;
@@ -33,6 +36,10 @@ public class Trash extends Fragment {
     private RecyclerView recyclerView;
     private DeletedItemAdapter adapter;
 
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private TextView emptyStateTextView;
+    private ImageView emptyStateImageView;
+
     private List<RecyclerItem> deletedItems;
 
     private static final String TRASH_FOLDER_NAME = "Trash";
@@ -46,14 +53,12 @@ public class Trash extends Fragment {
         recyclerView = view.findViewById(R.id.trashRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
+        emptyStateTextView = view.findViewById(R.id.trashText);
+        emptyStateImageView = view.findViewById(R.id.trashImageView);
+        swipeRefreshLayout = view.findViewById(R.id.trashSwipeRefreshLayout);
+
         // Initialize deletedItems
         deletedItems = new ArrayList<>();
-
-        // Create Trash folder if it doesn't exist
-        createTrashFolderIfNeeded();
-
-        // Load deleted items from the Trash folder
-        loadDeletedItems();
 
         // Set up the adapter with deleted items
         adapter = new DeletedItemAdapter(deletedItems, new DeletedItemAdapter.OnItemActionListener() {
@@ -68,6 +73,17 @@ public class Trash extends Fragment {
             }
         });
         recyclerView.setAdapter(adapter);
+
+        // Create Trash folder if it doesn't exist
+        createTrashFolderIfNeeded();
+
+        // Load deleted items from the Trash folder
+        loadDeletedItems();
+
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            loadDeletedItems();
+            swipeRefreshLayout.setRefreshing(false);
+        });
 
         return view;
     }
@@ -94,20 +110,38 @@ public class Trash extends Fragment {
     private void loadDeletedItems() {
         File trashFolder = new File(requireContext().getExternalFilesDir(null), TRASH_FOLDER_NAME);
 
+        deletedItems.clear();
+
         if (trashFolder.exists() && trashFolder.isDirectory()) {
             File[] files = trashFolder.listFiles();
             if (files != null && files.length > 0) {
                 for (File file : files) {
+                    updateEmptyStateVisibility();
                     boolean isDirectory = file.isDirectory();
                     deletedItems.add(new RecyclerItem(file.getName(), formatFileSize(file.length()), "", isDirectory, file.getAbsolutePath()));
                 }
             } else {
+                updateEmptyStateVisibility();
                 Log.e("Trash", "No files found in Trash folder.");
                 Toast.makeText(requireContext(), "No items in Trash.", Toast.LENGTH_SHORT).show();
             }
+            adapter.notifyDataSetChanged();
         } else {
+            updateEmptyStateVisibility();
             Log.e("Trash", "Trash folder does not exist.");
             Toast.makeText(requireContext(), "Trash folder does not exist.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void updateEmptyStateVisibility() {
+        if (deletedItems.isEmpty()) {
+            emptyStateImageView.setVisibility(View.VISIBLE);
+            emptyStateTextView.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+        } else {
+            emptyStateImageView.setVisibility(View.GONE);
+            emptyStateTextView.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
         }
     }
 

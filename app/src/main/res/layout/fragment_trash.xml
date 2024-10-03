@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Trash">
     <TextView
         android:id="@+id/trashTextView"
@@ -14,7 +15,26 @@
         android:textSize="40sp"
         android:layout_marginTop="56dp"
         android:text="Trash"/>
+    <ImageView
+        android:id="@+id/trashImageView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/no_files"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:visibility="gone"/>
+    <TextView
+        android:id="@+id/trashText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No trash found"
+        android:gravity="center"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="200dp"
+        android:textSize="20sp"
+        android:visibility="gone"/>
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/trashSwipeRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/trashTextView">

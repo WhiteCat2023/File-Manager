@@ -86,10 +86,10 @@ public class InternalStorageAdapter extends RecyclerView.Adapter<InternalStorage
                         actionListener.onRenameClick(item);  // Handle download
                         return true;
                     }
-                    if (menuItem.getItemId() == R.id.moveToInternalItem) {
-                        actionListener.onMoveToClick(item);  // Handle download
-                        return true;
-                    }
+//                    if (menuItem.getItemId() == R.id.moveToInternalItem) {
+//                        actionListener.onMoveToClick(item);  // Handle download
+//                        return true;
+//                    }
                     if (menuItem.getItemId() == R.id.deleteInternalItem) {
                         actionListener.onDeleteClick(item);  // Handle delete
                         return true;
