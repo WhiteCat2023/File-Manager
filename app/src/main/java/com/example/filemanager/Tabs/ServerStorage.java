@@ -16,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -66,6 +67,9 @@ public class ServerStorage extends Fragment {
 
     private static final String SHARED_PREF_NAME = "session";
     private static final String SESSION_EMAIL = "user_email";
+    private static final String SERVER_STORAGE_CURRENT_PATH = "server_storage_current_path";
+
+
 
 
     @Override
@@ -89,9 +93,9 @@ public class ServerStorage extends Fragment {
         adapter = new ServerStorageAdapter(recyclerItems,
                 item -> {
                     if (item.isDirectory()) {
-                        // If the clicked item is a folder, fetch its contents
-                        currentPath += "/" + item.getFileName();
-                        fetchFilesFromHostinger(currentPath);
+                        folderStack.push(currentPath); // Save current path
+                        currentPath += "/" + item.getFileName(); // Update current path
+                        fetchFilesFromHostinger(currentPath); // Fetch new folder contents
                     }
                 },
                 new ServerStorageAdapter.OnItemActionListener() {
@@ -152,6 +156,7 @@ public class ServerStorage extends Fragment {
         }
         currentPath = folder;
 
+        saveCurrentPath(currentPath);
         // Fetch the contents of the new folder
         fetchFilesFromHostinger(currentPath); // Load the folder's contents
     }
@@ -175,7 +180,7 @@ public class ServerStorage extends Fragment {
     // Fetch files from the Hostinger API
     private void fetchFilesFromHostinger(String folderPath) {
         // Show refresh animation
-        if (swipeRefreshLayout != null){
+        if (swipeRefreshLayout != null) {
             swipeRefreshLayout.setRefreshing(true);
         }
 
@@ -204,8 +209,8 @@ public class ServerStorage extends Fragment {
 
                                 String fullPath = folderPath.isEmpty() ? name : folderPath + "/" + name;
 
-                                // Add the file to the list
-                                if (!name.equals("..") && !name.equals(".")){
+                                // Add the file or directory to the list
+                                if (!name.equals("..") && !name.equals(".")) {
                                     recyclerItems.add(new RecyclerItem(name, formatFileSize(size.length()), date, isDirectory, fullPath));
                                 }
                             }
@@ -217,12 +222,12 @@ public class ServerStorage extends Fragment {
                             String errorMessage = jsonObject.optString("message", "Error fetching files");
                             Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show();
                             emptyStateImageView.setVisibility(View.VISIBLE);
-                            emptyStateImageView.setVisibility(View.VISIBLE);
+                            emptyStateTextView.setVisibility(View.VISIBLE);
                             recyclerView.setVisibility(View.GONE);
                         }
                     } catch (JSONException e) {
                         // Handle JSON parsing error
-                        handleError("Error parsing JSON" + e.getMessage());
+                        handleError("Error parsing JSON: " + e.getMessage());
                     } finally {
                         // Stop refresh animation
                         swipeRefreshLayout.setRefreshing(false);
@@ -231,14 +236,14 @@ public class ServerStorage extends Fragment {
                 error -> {
                     // Handle network error
                     swipeRefreshLayout.setRefreshing(false);
-                    handleError("Network Error" + error.getMessage());
+                    handleError("Network Error: " + error.getMessage());
                 }) {
             // Add parameters to the request
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
                 params.put("auth_token", auth); // Replace with your actual token
-                params.put("path", MY_FOLDER_PATH  + folderPath);
+                params.put("path", MY_FOLDER_PATH + folderPath);
                 return params;
             }
         };
@@ -246,6 +251,7 @@ public class ServerStorage extends Fragment {
         // Add the request to the queue
         queue.add(request);
     }
+
     private void updateEmptyStateVisibility() {
         if (recyclerItems.isEmpty()) {
             emptyStateImageView.setVisibility(View.VISIBLE);
@@ -414,6 +420,31 @@ public class ServerStorage extends Fragment {
         );
 
         queue.add(request);
+    }
+
+    private void saveCurrentPath(String path) {
+        SharedPreferences sharedPreferences = requireContext().getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(SERVER_STORAGE_CURRENT_PATH, path);
+        editor.apply();
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Handle back press specifically in the fragment
+        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (!folderStack.isEmpty()) {
+                    goBack();
+                } else {
+                    requireActivity().onBackPressed();
+                }
+            }
+        });
     }
 
     // Method to format file size into a readable format

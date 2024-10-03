@@ -25,7 +25,11 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.example.filemanager.Fragments.Dashboard;
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.filemanager.Fragments.Feedback;
 import com.example.filemanager.Fragments.Files;
 import com.example.filemanager.Fragments.Todo;
@@ -38,7 +42,12 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.textfield.TextInputEditText;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -51,10 +60,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private static final String DOWNLOAD_FOLDER_NAME = "MyDownloads";
 
+    private static final String MY_FOLDER_PATH = "./android_api/public_html/myfolder/";
+
+    private static final String AUTH_TOKEN = "9d9acfb19ead219de71d83e988c8653c";
+
+    private static final String CREATE_FOLDER_API = "https://skcalamba.scarlet2.io/createFolder.php";
+
     private static final String SHARED_PREF_NAME = "session";
     private static final String SESSION_EMAIL = "user_email";
     private static final String SESSION_POSITION = "user_position";
     private static final String SESSION_NAME = "user_name";
+    private static final String SERVER_STORAGE_CURRENT_PATH = "server_storage_current_path";
 
     TextView headerName, headerEmail, headerPosition;
 
@@ -177,8 +193,80 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             internalNewFolder.setOnClickListener(v -> {
                 newFolderInInternalStorage();
             });
+            serverNewFolder.setOnClickListener(v ->{
+                newFolderInServerStorage();
+            });
         });
     }
+
+    public void newFolderInServerStorage() {
+        View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.alertdialog_input_folder, null);
+        TextInputEditText newFolderName = view.findViewById(R.id.folderNameInput);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this)
+                .setTitle("Create Folder on Server")
+                .setView(view)
+                .setPositiveButton("Create", (dialog, which) -> {
+                    String folderName = newFolderName.getText().toString().trim();
+                    if (!folderName.isEmpty()) {
+                        createFolderOnServer(folderName);
+                    } else {
+                        Toast.makeText(MainActivity.this, "Please enter a folder name", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+
+    private void createFolderOnServer(String folderName) {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
+        String currentPath = sharedPreferences.getString(SERVER_STORAGE_CURRENT_PATH, MY_FOLDER_PATH); // Provide a default path if not found
+
+        // Build the JSON payload for the request
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("folder_name", folderName);
+            jsonBody.put("current_path", currentPath);  // Specify the path where the folder will be created
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        // Create a Volley request queue
+        RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
+
+        // Create a JsonObjectRequest
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+                Request.Method.POST,
+                CREATE_FOLDER_API,  // Your PHP API endpoint URL
+                jsonBody,
+                response -> {
+                    try {
+                        String status = response.getString("status");
+                        String message = response.getString("message");
+                        Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+                    } catch (JSONException e) {
+                        Toast.makeText(MainActivity.this, "Response parsing error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    // Handle error
+                    Toast.makeText(MainActivity.this, "Failed to create folder: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                }) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                // Add the authorization header with the API key
+                Map<String, String> headers = new HashMap<>();
+                headers.put("auth_token", AUTH_TOKEN);  // Set the correct auth token
+                headers.put("Content-Type", "application/json");
+                return headers;
+            }
+        };
+
+        // Add the request to the Volley queue
+        requestQueue.add(jsonObjectRequest);
+    }
+
 
     public void newFolderInInternalStorage(){
         View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.alertdialog_input_folder, null);
@@ -223,7 +311,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void clearSharedPreferences() {
-        SharedPreferences preferences = getSharedPreferences("your_preferences_name", Context.MODE_PRIVATE);
+        SharedPreferences preferences = getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.clear();
         editor.apply();
@@ -274,12 +362,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     // Removes the session and logs the user out
     private void logout() {
-        SharedPreferences sharedPreferences = getSharedPreferences("session", Context.MODE_PRIVATE);
+        // Clear session data
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
         editor.apply();
 
+        // Redirect to login activity
         Intent intent = new Intent(MainActivity.this, Login.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clear backstack
         startActivity(intent);
         finish();
     }

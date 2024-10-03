@@ -42,6 +42,9 @@
         android:layout_marginBottom="20dp">
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/todoDescriptionInput"
+            android:inputType="textMultiLine"
+            android:lines="6"
+            android:gravity="top"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Description"/>
