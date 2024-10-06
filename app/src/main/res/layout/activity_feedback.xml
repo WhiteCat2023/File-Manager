@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".Fragments.Feedback">
+    tools:context=".Feedback">
+    <ImageView
+        android:id="@+id/feedbackBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:contentDescription="uploadBack"
+        app:srcCompat="@drawable/baseline_arrow_back_24"
+        tools:ignore="TouchTargetSizeCheck"/>
 
     <TextView
         android:id="@+id/feedbackTextView"

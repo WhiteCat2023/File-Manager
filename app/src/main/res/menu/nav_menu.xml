@@ -4,23 +4,33 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn = "navigation_view">
 
+
     <group
         android:checkableBehavior="single">
+        <item
+            android:icon="@drawable/baseline_folder_24"
+            android:id="@+id/nav_files"
+            android:title="Files" />
 
+        <item
+            android:icon="@drawable/baseline_checklist_24"
+            android:id="@+id/nav_todo"
+            android:title="Todo" />
         <item
             android:id="@+id/nav_trash"
             android:icon="@drawable/baseline_delete_24"
             android:title="Trash"/>
-        <item
-            android:id="@+id/nav_feedback"
-            android:icon="@drawable/baseline_feedback_24"
-            android:title="Feedback"/>
+
 
     </group>
     <item
         android:title="">
 
         <menu>
+            <item
+                android:id="@+id/nav_feedback"
+                android:icon="@drawable/baseline_feedback_24"
+                android:title="Feedback"/>
             <item
                 android:id="@+id/nav_signout"
                 android:icon="@drawable/baseline_logout_24"

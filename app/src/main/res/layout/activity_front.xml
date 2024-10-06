@@ -6,7 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Front">
-
     <ImageView
         android:id="@+id/logo"
         android:layout_width="166dp"
@@ -18,7 +17,6 @@
         app:layout_constraintTop_toTopOf="@+id/main"
         app:layout_constraintVertical_bias="0.332"
         app:srcCompat="@drawable/logo" />
-
     <LinearLayout
         app:layout_constraintTop_toBottomOf="@+id/logo"
         app:layout_constraintLeft_toLeftOf="@+id/logo"

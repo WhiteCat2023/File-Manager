@@ -187,6 +187,7 @@ public class Upload extends AppCompatActivity {
 
             @Override
             protected Map<String, DataPart> getByteData() {
+
                 Map<String, DataPart> params = new HashMap<>();
                 for (Uri uri : uris) {
                     String fileName = getFileName(uri);

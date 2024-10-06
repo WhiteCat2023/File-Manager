@@ -128,7 +128,6 @@ public class Todo extends Fragment implements ToDoListAdapter.OnDeleteClickListe
     }
 
     private void handleError(String message) {
-        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
         Log.e("Todo", message);
         emptyStateImageView.setVisibility(View.VISIBLE);
         emptyStateTextView.setVisibility(View.VISIBLE);

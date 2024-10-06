@@ -5,5 +5,5 @@
         android:title="Restore" />
     <item
         android:id="@+id/trashDelete"
-        android:title="Delete"/>
+        android:title="Delete Permanently"/>
 </menu>

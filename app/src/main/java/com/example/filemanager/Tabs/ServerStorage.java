@@ -3,6 +3,7 @@ package com.example.filemanager.Tabs;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
@@ -12,24 +13,31 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.filemanager.R;
+import com.example.filemanager.Upload;
 import com.example.filemanager.Utils.ServerStorageAdapter;
 import com.example.filemanager.Utils.RecyclerItem;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,6 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.stream.IntStream;
 
 public class ServerStorage extends Fragment {
     // Initialize variables
@@ -50,11 +59,19 @@ public class ServerStorage extends Fragment {
     private ImageView emptyStateImageView;
     private TextView emptyStateTextView;
     private RecyclerView recyclerView;
+    private LinearLayout breadcrumbContainerServer;
+    private HorizontalScrollView horizontalScrollView;
+
+    private FloatingActionButton addFabServer, uploadFilesFab, newServerFolderFab ;
+    private TextView uploadFilesFabTextView, newServerFolderFabTextView;
+    private Boolean isAllVisible;
+
 
     // Hostinger API endpoint (replace with your actual endpoint)
     private static final String HOSTINGER_API_URL = "https://skcalamba.scarlet2.io/android_api/hostinger_api.php";
     private static final String DOWNLOAD_URL = "https://skcalamba.scarlet2.io/android_api/public_html/myfolder/";
     private static final String FILE_DELETE_URL = "https://skcalamba.scarlet2.io/android_api/delete_file.php";
+    private static final String CREATE_FOLDER_API = "https://skcalamba.scarlet2.io/createFolder.php";
 
     // Define the folder name for internal storage
     private static final String DOWNLOAD_FOLDER_NAME = "MyDownloads";
@@ -69,7 +86,7 @@ public class ServerStorage extends Fragment {
     private static final String SESSION_EMAIL = "user_email";
     private static final String SERVER_STORAGE_CURRENT_PATH = "server_storage_current_path";
 
-
+    public static int startIndex = 0;
 
 
     @Override
@@ -79,6 +96,22 @@ public class ServerStorage extends Fragment {
 
         emptyStateImageView = view.findViewById(R.id.externalImageView);
         emptyStateTextView = view.findViewById(R.id.externalTextView);
+
+        horizontalScrollView = view.findViewById(R.id.serverHorizontalScrollView);
+
+        breadcrumbContainerServer = view.findViewById(R.id.breadcrumb_container_server);
+
+//        Fabs
+        addFabServer = view.findViewById(R.id.fabServer);
+        uploadFilesFab = view.findViewById(R.id.uploadFiles);
+        newServerFolderFab = view.findViewById(R.id.newServerFolder);
+
+        uploadFilesFabTextView = view.findViewById(R.id.uploadFilesTextView);
+        newServerFolderFabTextView = view.findViewById(R.id.newServerFolderTextView);
+
+
+        isAllVisible = false;
+
 
         folderStack = new Stack<>();
         // Initialize RecyclerView
@@ -94,7 +127,7 @@ public class ServerStorage extends Fragment {
                 item -> {
                     if (item.isDirectory()) {
                         folderStack.push(currentPath); // Save current path
-                        currentPath += "/" + item.getFileName(); // Update current path
+                        currentPath = currentPath.isEmpty() ? item.getFileName() : currentPath + "/" + item.getFileName(); // Update current path
                         fetchFilesFromHostinger(currentPath); // Fetch new folder contents
                     }
                 },
@@ -133,22 +166,123 @@ public class ServerStorage extends Fragment {
             fetchCurrentDownloads(); // Refresh current downloads
         });
 
+        addFabServer.setOnClickListener(v -> {
+            if (!isAllVisible){
+                uploadFilesFab.show();
+                newServerFolderFab.show();
+                uploadFilesFabTextView.setVisibility(View.VISIBLE);
+                newServerFolderFabTextView.setVisibility(View.VISIBLE);
+                isAllVisible = true;
+
+                uploadFilesFab.setOnClickListener(v1 -> {
+                   Intent intent = new Intent(getContext(), Upload.class);
+                   startActivity(intent);
+                   addFabServer.hide();
+                });
+                newServerFolderFab.setOnClickListener(v1 -> {
+
+                    View views = LayoutInflater.from(this.getContext()).inflate(R.layout.alertdialog_input_folder, null);
+                    TextInputEditText newFolderName = views.findViewById(R.id.folderNameInput);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this.getContext())
+                        .setTitle("Create Folder on Server")
+                        .setView(views)
+                        .setPositiveButton("Create", (dialog, which) -> {
+                            String folderName = newFolderName.getText().toString().trim();
+                            if (!folderName.isEmpty()) {
+
+                            } else {
+                                Toast.makeText(this.getContext(), "Please enter a folder name", Toast.LENGTH_SHORT).show();
+                            }
+                        }).setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+                    builder.show();
+                });
+            }else{
+                uploadFilesFab.hide();
+                newServerFolderFab.hide();
+                uploadFilesFabTextView.setVisibility(View.GONE);
+                newServerFolderFabTextView.setVisibility(View.GONE);
+                isAllVisible = false;
+            }
+        });
+
 
         return view;
     }
+
+
+
     public void goBack() {
         if (!folderStack.isEmpty()) {
             currentPath = folderStack.pop(); // Go back to the previous folder
             loadFolder(currentPath);
-            emptyStateImageView.setVisibility(View.VISIBLE);
-            emptyStateTextView.setVisibility(View.VISIBLE);
-            recyclerView.setVisibility(View.GONE); // Load the previous folder
+            updateBreadcrumbs();
         } else {
             // Handle the case when there are no previous folders (e.g., show a message)
             Toast.makeText(requireContext(), "No more folders to go back to", Toast.LENGTH_SHORT).show();
         }
     }
+    private void updateBreadcrumbs() {
+        // Clear existing breadcrumbs
+        breadcrumbContainerServer.removeAllViews();
 
+        // Ensure currentPath is not null or empty
+        if (currentPath == null || currentPath.isEmpty()) {
+            return;
+        }
+
+        // Split the current path into parts
+        String[] pathParts = currentPath.split("/");
+
+        // Find the index of the "myfolder" folder
+        int startIndex = 0;
+        for (int i = 0; i < pathParts.length; i++) {
+            if (pathParts[i].equals("myfolder")) {
+                startIndex = i; // Start breadcrumb from "myfolder"
+                break;
+            }
+        }
+
+        // Iterate over each part and create a clickable TextView for each folder
+        for (int i = startIndex; i < pathParts.length; i++) {
+            String part = pathParts[i];
+
+            if (!part.isEmpty()) {
+                // Create a new TextView for each part of the path
+                TextView breadcrumb = new TextView(getContext());
+                breadcrumb.setText(part);
+                breadcrumb.setPadding(8, 20, 8, 20);  // Add some padding
+                breadcrumb.setTextSize(16);
+
+                // Use ContextCompat for fetching color to avoid deprecated methods
+                breadcrumb.setTextColor(ContextCompat.getColor(getContext(), R.color.purple));
+
+                // Make the breadcrumb clickable
+                final int index = i;  // Capture the index for the click listener
+                breadcrumb.setOnClickListener(v -> {
+                    // Rebuild the path based on the clicked breadcrumb
+                    StringBuilder newPath = new StringBuilder();
+                    for (int j = 0; j <= index; j++) {
+                        if (!pathParts[j].isEmpty()) {
+                            newPath.append(pathParts[j]).append("/");
+                        }
+                    }
+                    currentPath = newPath.toString();
+                    loadFolder(currentPath);  // Load the folder corresponding to the clicked breadcrumb
+                });
+
+                // Add the breadcrumb to the container
+                breadcrumbContainerServer.addView(breadcrumb);
+
+                // Add a separator (e.g., ">") between breadcrumbs, except for the last one
+                if (i < pathParts.length - 1) {
+                    TextView separator = new TextView(getContext());
+                    separator.setText(">");
+                    separator.setPadding(8, 8, 8, 8);
+                    breadcrumbContainerServer.addView(separator);
+                }
+            }
+        }
+    }
     public void loadFolder(String folder) {
         // Only add to the stack if we're not going back to the root
         if (!currentPath.isEmpty()) {
@@ -157,12 +291,10 @@ public class ServerStorage extends Fragment {
         currentPath = folder;
 
         saveCurrentPath(currentPath);
+        Log.d("ServerStorage", "Loading folder: " + currentPath);
         // Fetch the contents of the new folder
         fetchFilesFromHostinger(currentPath); // Load the folder's contents
     }
-
-
-
     // Method to create the download folder in internal storage
     private void createDownloadFolder() {
         File directory = new File(requireContext().getExternalFilesDir(null), DOWNLOAD_FOLDER_NAME);
@@ -175,8 +307,6 @@ public class ServerStorage extends Fragment {
             }
         }
     }
-
-
     // Fetch files from the Hostinger API
     private void fetchFilesFromHostinger(String folderPath) {
         // Show refresh animation
@@ -208,13 +338,14 @@ public class ServerStorage extends Fragment {
                                 boolean isDirectory = fileObject.getBoolean("isDirectory");
 
                                 String fullPath = folderPath.isEmpty() ? name : folderPath + "/" + name;
-
+                                saveCurrentPath(fullPath);
                                 // Add the file or directory to the list
                                 if (!name.equals("..") && !name.equals(".")) {
                                     recyclerItems.add(new RecyclerItem(name, formatFileSize(size.length()), date, isDirectory, fullPath));
                                 }
                             }
 
+                            updateBreadcrumbs();
                             adapter.notifyDataSetChanged(); // Notify adapter of new data
                             updateEmptyStateVisibility();
                         } else {
@@ -251,7 +382,6 @@ public class ServerStorage extends Fragment {
         // Add the request to the queue
         queue.add(request);
     }
-
     private void updateEmptyStateVisibility() {
         if (recyclerItems.isEmpty()) {
             emptyStateImageView.setVisibility(View.VISIBLE);
@@ -264,7 +394,6 @@ public class ServerStorage extends Fragment {
         }
         Log.d("Todo", "Item Count: " + recyclerItems.size());
     }
-
     private void handleError(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
         Log.e("Todo", message);
@@ -273,7 +402,6 @@ public class ServerStorage extends Fragment {
         emptyStateTextView.setText(message);
         recyclerView.setVisibility(View.GONE);
     }
-
     // Method to download the file
     private void downloadFile(RecyclerItem item) {
         if (!item.isDirectory()) {
@@ -309,7 +437,6 @@ public class ServerStorage extends Fragment {
             Toast.makeText(requireContext(), "This is a directory, not a file.", Toast.LENGTH_SHORT).show();
         }
     }
-
     // Method to create a unique file name if a file with the same name exists
     private String getUniqueFileName(File file) {
         String fileName = file.getName();
@@ -330,7 +457,6 @@ public class ServerStorage extends Fragment {
 
         return uniqueFileName; // Return the unique file name
     }
-
     // Method to fetch currently downloading files
     private void fetchCurrentDownloads() {
         DownloadManager downloadManager = (DownloadManager) requireContext().getSystemService(Context.DOWNLOAD_SERVICE);
@@ -373,7 +499,6 @@ public class ServerStorage extends Fragment {
             Toast.makeText(requireContext(), "Download Manager not available", Toast.LENGTH_SHORT).show();
         }
     }
-
     private void fileDeletionRequest(String fileName) {
         RequestQueue queue = Volley.newRequestQueue(requireContext());
 
@@ -421,15 +546,12 @@ public class ServerStorage extends Fragment {
 
         queue.add(request);
     }
-
     private void saveCurrentPath(String path) {
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(SERVER_STORAGE_CURRENT_PATH, path);
         editor.apply();
     }
-
-
     @Override
     public void onResume() {
         super.onResume();
@@ -446,7 +568,6 @@ public class ServerStorage extends Fragment {
             }
         });
     }
-
     // Method to format file size into a readable format
     private String formatFileSize(long size) {
         if (size <= 0) return "0 KB";

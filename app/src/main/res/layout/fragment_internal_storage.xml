@@ -8,8 +8,8 @@
 
     <ImageView
         android:id="@+id/internalImageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
         android:layout_gravity="center"
         app:srcCompat="@drawable/no_files"
         android:layout_centerVertical="true"
@@ -19,17 +19,29 @@
         android:id="@+id/internalTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="No Files Founds"
+        android:text="No Files"
         android:gravity="center"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="150dp"
+        android:layout_below="@+id/internalImageView"
         android:textSize="20sp"
         android:visibility="gone"/>
+    <HorizontalScrollView
+        android:id="@+id/intenrnalHorizontalScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="20dp"
+        android:background="@color/light_lavander">
+        <LinearLayout
+            android:id="@+id/breadcrumb_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"/>
+    </HorizontalScrollView>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/internalRefreshLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_below="@+id/intenrnalHorizontalScrollView">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/internalRecyclerView"
@@ -37,5 +49,56 @@
             android:layout_height="wrap_content"/>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/contraintParent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabInternal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:backgroundTint="@color/white"
+            android:contentDescription="@string/todo"
+            android:src="@drawable/baseline_add_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:maxImageSize="40dp"
+            app:tint="@color/purple"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="20dp"/>
+
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/newLocalFolder"
+            app:srcCompat="@drawable/baseline_create_new_folder_24"
+            android:layout_width="40dp"
+            app:fabCustomSize="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="20dp"
+            app:layout_constraintBottom_toTopOf="@id/fabInternal"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:visibility="gone"/>
+        <TextView
+            android:padding="10dp"
+            android:background="@drawable/white_bg"
+            android:id="@+id/newLocalFolderTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New Folder"
+            app:layout_constraintTop_toTopOf="@id/newLocalFolder"
+            app:layout_constraintBottom_toBottomOf="@id/newLocalFolder"
+            app:layout_constraintEnd_toStartOf="@id/newLocalFolder"
+            android:layout_marginEnd="10dp"
+            android:visibility="gone"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </RelativeLayout>

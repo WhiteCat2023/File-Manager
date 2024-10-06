@@ -27,7 +27,6 @@ public class InternalStorageAdapter extends RecyclerView.Adapter<InternalStorage
     // Interface for additional actions
     public interface OnItemActionListener {
         void onRenameClick(RecyclerItem item);
-        void onMoveToClick(RecyclerItem item);
         void onDeleteClick(RecyclerItem item);
     }
 
@@ -69,6 +68,10 @@ public class InternalStorageAdapter extends RecyclerView.Adapter<InternalStorage
                         actionListener.onDeleteClick(item);  // Handle delete
                         return true;
                     }
+                    if (menuItem.getItemId() == R.id.rename) {
+                        actionListener.onRenameClick(item);  // Handle Rename
+                        return true;
+                    }
                     return false;
                 });
                 popupMenu.show();
@@ -86,10 +89,6 @@ public class InternalStorageAdapter extends RecyclerView.Adapter<InternalStorage
                         actionListener.onRenameClick(item);  // Handle download
                         return true;
                     }
-//                    if (menuItem.getItemId() == R.id.moveToInternalItem) {
-//                        actionListener.onMoveToClick(item);  // Handle download
-//                        return true;
-//                    }
                     if (menuItem.getItemId() == R.id.deleteInternalItem) {
                         actionListener.onDeleteClick(item);  // Handle delete
                         return true;

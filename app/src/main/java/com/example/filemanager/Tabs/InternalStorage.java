@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +24,7 @@ import com.example.filemanager.R;
 import com.example.filemanager.Trash;
 import com.example.filemanager.Utils.InternalStorageAdapter;
 import com.example.filemanager.Utils.RecyclerItem;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 
 import org.json.JSONObject;
@@ -49,10 +51,14 @@ public class InternalStorage extends Fragment {
     private static final String DOWNLOAD_FOLDER_NAME = "MyDownloads";
     private File currentDirectory;
     private List<RecyclerItem> deletedItems;
+    private LinearLayout breadcrumbContainer;
+
+    private TextView newLocalFolderTextView;
+    private FloatingActionButton newLocalFolder, fabInternal;
+    private Boolean isAllVisible;
 
     private Stack<String> folderStack;
 
-    private static final String METADATA_FILE_NAME = "trash_metadata.json";
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout
@@ -60,6 +66,16 @@ public class InternalStorage extends Fragment {
 
         emptyStateImageView = view.findViewById(R.id.internalImageView);
         emptyStateTextView = view.findViewById(R.id.internalTextView);
+
+        breadcrumbContainer = view.findViewById(R.id.breadcrumb_container);
+
+        //Fab
+        newLocalFolder = view.findViewById(R.id.newLocalFolder);
+        newLocalFolderTextView = view.findViewById(R.id.newLocalFolderTextView);
+        fabInternal = view.findViewById(R.id.fabInternal);
+
+        isAllVisible = false;
+
         // Initialize RecyclerView
         recyclerView = view.findViewById(R.id.internalRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -85,11 +101,6 @@ public class InternalStorage extends Fragment {
                     }
 
                     @Override
-                    public void onMoveToClick(RecyclerItem item) {
-
-                    }
-
-                    @Override
                     public void onDeleteClick(RecyclerItem item) {
                         // Handle delete
                         deleteInternalFile(item.getFileName());
@@ -103,6 +114,8 @@ public class InternalStorage extends Fragment {
         // Load files from internal storage
         currentDirectory = new File(requireContext().getExternalFilesDir(null), DOWNLOAD_FOLDER_NAME);
         loadFilesFromDirectory(currentDirectory);
+        updateBreadcrumbs();
+
 
 
         // Set up refresh listener
@@ -110,8 +123,136 @@ public class InternalStorage extends Fragment {
             loadFilesFromDirectory(currentDirectory);
             swipeRefreshLayout.setRefreshing(false);
         });
+        fabInternal.setOnClickListener(v -> {
+            if (!isAllVisible){
+                newLocalFolder.show();
+                newLocalFolderTextView.setVisibility(View.VISIBLE);
+                isAllVisible = true;
+                // Trigger folder creation
+                newLocalFolder.setOnClickListener(v1 -> {
+                    createFolderDialog();  // Open dialog to create a folder
+                });
+            }else{
+                newLocalFolder.hide();
+                newLocalFolderTextView.setVisibility(View.GONE);
+                isAllVisible = false;
+            }
+        });
 
         return view;
+    }
+    // Create a dialog for folder name input and create the folder in the current directory
+    private void createFolderDialog() {
+        // Inflate a custom view with an input for the folder name
+        View view = LayoutInflater.from(requireContext()).inflate(R.layout.alertdialog_input_folder, null);
+        TextInputEditText folderNameInput = view.findViewById(R.id.folderNameInput);
+
+        // Create an alert dialog to input the folder name
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext())
+                .setTitle("Create New Folder")
+                .setView(view)
+                .setPositiveButton("Create", (dialog, which) -> {
+                    String folderName = folderNameInput.getText().toString().trim();
+                    if (!folderName.isEmpty()) {
+                        createFolderInCurrentDirectory(folderName);  // Create the folder
+                    } else {
+                        Toast.makeText(requireContext(), "Please enter a folder name", Toast.LENGTH_SHORT).show();
+                    }
+                }).setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+        builder.show();
+    }
+    // Method to create a folder inside the current directory
+    private void createFolderInCurrentDirectory(String folderName) {
+        // Define the new folder path
+        File newFolder = new File(currentDirectory, folderName);
+
+        // Check if the folder already exists
+        if (!newFolder.exists()) {
+            boolean isCreated = newFolder.mkdir();  // Attempt to create the new folder
+            if (isCreated) {
+                Toast.makeText(requireContext(), "Folder created successfully", Toast.LENGTH_SHORT).show();
+                loadFilesFromDirectory(currentDirectory);  // Refresh the current directory view
+            } else {
+                Toast.makeText(requireContext(), "Failed to create folder", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(requireContext(), "Folder already exists", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void updateBreadcrumbs() {
+        breadcrumbContainer.removeAllViews(); // Clear the existing breadcrumbs
+
+        // Split the current path into folders
+        String[] folders = currentDirectory.getAbsolutePath().split("/");
+
+        // Find the index of the "MyDownloads" folder
+        int startIndex = 0;
+        for (int i = 0; i < folders.length; i++) {
+            if (folders[i].equals(DOWNLOAD_FOLDER_NAME)) {
+                startIndex = i; // Start breadcrumb from "MyDownloads"
+                break;
+            }
+        }
+
+        // Create breadcrumbs for each folder starting from "MyDownloads"
+        StringBuilder currentPathBuilder = new StringBuilder();
+        for (int i = startIndex; i < folders.length; i++) {
+            final int index = i;
+            String folderName = folders[i];
+
+            if (!folderName.isEmpty()) {
+                currentPathBuilder.append("/").append(folderName);
+
+                // Create a TextView for each folder
+                TextView breadcrumbTextView = new TextView(requireContext());
+                breadcrumbTextView.setText(folderName);
+                breadcrumbTextView.setPadding(8, 20, 8, 20); // Add some padding for better visibility
+                breadcrumbTextView.setTextSize(16);
+                breadcrumbTextView.setTextColor(getResources().getColor(R.color.purple));
+
+                // Set the TextView to be clickable
+                breadcrumbTextView.setOnClickListener(v -> {
+                    // Build the path up to this breadcrumb
+                    File targetPath = new File("/"); // Start from root and build path
+                    for (int j = 0; j <= index; j++) {
+                        targetPath = new File(targetPath, folders[j]);
+                    }
+                    navigateToBreadcrumb(targetPath);
+                });
+
+                // Add the TextView to the breadcrumb container
+                breadcrumbContainer.addView(breadcrumbTextView);
+
+                // Add a ">" separator between breadcrumb items (except the last one)
+                if (i < folders.length - 1 && !folders[i + 1].equals(DOWNLOAD_FOLDER_NAME)) {
+                    TextView separator = new TextView(requireContext());
+                    separator.setText(" > ");
+                    separator.setPadding(4, 8, 4, 8);
+                    breadcrumbContainer.addView(separator);
+                }
+            }
+        }
+    }
+    // Method to navigate to a folder when a breadcrumb is clicked
+    private void navigateToBreadcrumb(File targetDirectory) {
+        if (targetDirectory.exists() && targetDirectory.isDirectory()) {
+            // Update the current directory
+            currentDirectory = targetDirectory;
+
+            // Clear folderStack and rebuild it up to the clicked breadcrumb
+            folderStack.clear();
+            String[] folders = currentDirectory.getAbsolutePath().split("/");
+            for (int i = 0; i < folders.length - 1; i++) { // Rebuild the stack excluding the current folder
+                folderStack.push(currentDirectory.getParentFile().getAbsolutePath());
+            }
+
+            // Load files and update breadcrumbs
+            loadFilesFromDirectory(currentDirectory);
+            updateBreadcrumbs();
+        } else {
+            Toast.makeText(requireContext(), "Unable to navigate to folder.", Toast.LENGTH_SHORT).show();
+        }
     }
     // Method to navigate into a directory
     private void openDirectory(String directoryName) {
@@ -120,8 +261,15 @@ public class InternalStorage extends Fragment {
             folderStack.push(currentDirectory.getAbsolutePath());
             currentDirectory = newDirectory;
             loadFilesFromDirectory(currentDirectory);
+            updateBreadcrumbs();
         } else {
-            Toast.makeText(requireContext(), "Cannot open directory.", Toast.LENGTH_SHORT).show();
+            AlertDialog alertDialog = new AlertDialog.Builder(requireContext())
+                    .setTitle("Error")
+                    .setMessage("Cannot open directory.")
+                    .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                    .create();
+            alertDialog.show();
+            Log.e("InternalStorage", "Cannot open directory.");
         }
     }
     // Method to load files and directories from the specified directory
@@ -157,7 +305,6 @@ public class InternalStorage extends Fragment {
             Toast.makeText(requireContext(), "Directory does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
-
     // Method to format file size into a readable format
     private String formatFileSize(long size) {
         if (size <= 0) return "0 KB";
@@ -165,7 +312,6 @@ public class InternalStorage extends Fragment {
         int idx = (int) (Math.log(size) / Math.log(1024));
         return String.format("%.1f %s", size / Math.pow(1024, idx), units[idx]);
     }
-
     // Method to open the file with the appropriate viewer
     private void openFile(RecyclerItem item) {
         if (item == null || item.getFileName() == null) {
@@ -212,7 +358,6 @@ public class InternalStorage extends Fragment {
                 break;
         }
     }
-
     // Method to get the file extension
     private String getFileExtension(String fileName) {
         if (fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0) {
@@ -220,7 +365,6 @@ public class InternalStorage extends Fragment {
         }
         return "";
     }
-
     // Method to open the file with the appropriate viewer using FileProvider
     private void openFileReader(String mimeType, String fileName) {
         File file = new File(requireContext().getExternalFilesDir(DOWNLOAD_FOLDER_NAME), fileName);
@@ -240,7 +384,6 @@ public class InternalStorage extends Fragment {
             Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
-
     // Method to move a file to the Trash folder along with its original path
     private void deleteInternalFile(String fileName) {
         File file = new File(currentDirectory, fileName);
@@ -297,8 +440,6 @@ public class InternalStorage extends Fragment {
             Toast.makeText(requireContext(), "File does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
-
-
     private void renameFile(String filename){
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.alertdialog_input, null);
         TextInputEditText rename = view.findViewById(R.id.renameInternalItem);
@@ -339,7 +480,14 @@ public class InternalStorage extends Fragment {
            String previousPath = folderStack.pop();
            currentDirectory = new File(previousPath);
            loadFilesFromDirectory(currentDirectory);
+           updateBreadcrumbs();
         } else {
+            AlertDialog alertDialog = new AlertDialog.Builder(requireContext())
+                    .setTitle("Error")
+                    .setMessage("No previous folders to go back to.")
+                    .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                    .create();
+            alertDialog.show();
             // Handle the case when there are no previous folders (e.g., show a message)
             Log.e("InternalStorage", "No previous folders to go back to.");
         }
