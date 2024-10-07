@@ -1,5 +1,6 @@
 package com.example.filemanager.Fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -17,9 +18,11 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.filemanager.NewTask;
 import com.example.filemanager.R;
 import com.example.filemanager.Utils.ToDoListAdapter;
 import com.example.filemanager.Utils.ToDoListItem;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,6 +38,7 @@ public class Todo extends Fragment implements ToDoListAdapter.OnDeleteClickListe
     private SwipeRefreshLayout refreshLayout;
     private ImageView emptyStateImageView;
     private TextView emptyStateTextView;
+    private ExtendedFloatingActionButton newFabTask;
 
     private static final String todoUrl = "https://skcalamba.scarlet2.io/android_api/todo/get_task.php";
 
@@ -48,6 +52,12 @@ public class Todo extends Fragment implements ToDoListAdapter.OnDeleteClickListe
         emptyStateTextView = view.findViewById(R.id.todoEmptyStateTextView);
         recyclerView = view.findViewById(R.id.todoRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        newFabTask = view.findViewById(R.id.newFabTask);
+
+        newFabTask.setOnClickListener(v -> {
+            Intent intent = new Intent(this.getContext(), NewTask.class);
+            startActivity(intent);
+        });
 
         // Initialize the list and adapter
         toDoListItem = new ArrayList<>();

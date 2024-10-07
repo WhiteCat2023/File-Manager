@@ -5,11 +5,22 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Fragments.Todo">
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/newFabsTasking"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        app:icon="@drawable/baseline_add_24"
+        android:text="New Task"/>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:layout_marginBottom="80dp">
+        android:orientation="vertical">
+
         <TextView
             android:id="@+id/todoTitle"
             android:layout_width="match_parent"
@@ -63,7 +74,6 @@
 
 
     </LinearLayout>
-
 
 
 </RelativeLayout>

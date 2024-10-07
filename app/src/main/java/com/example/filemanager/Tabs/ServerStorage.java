@@ -2,6 +2,7 @@ package com.example.filemanager.Tabs;
 
 import android.app.AlertDialog;
 import android.app.DownloadManager;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -129,6 +130,8 @@ public class ServerStorage extends Fragment {
                         folderStack.push(currentPath); // Save current path
                         currentPath = currentPath.isEmpty() ? item.getFileName() : currentPath + "/" + item.getFileName(); // Update current path
                         fetchFilesFromHostinger(currentPath); // Fetch new folder contents
+                    }else{
+                        previewFile(item);
                     }
                 },
                 new ServerStorageAdapter.OnItemActionListener() {
@@ -189,7 +192,7 @@ public class ServerStorage extends Fragment {
                         .setPositiveButton("Create", (dialog, which) -> {
                             String folderName = newFolderName.getText().toString().trim();
                             if (!folderName.isEmpty()) {
-
+                                createFolder(folderName);
                             } else {
                                 Toast.makeText(this.getContext(), "Please enter a folder name", Toast.LENGTH_SHORT).show();
                             }
@@ -209,7 +212,48 @@ public class ServerStorage extends Fragment {
         return view;
     }
 
+    private void createFolder(String folderName) {
+        RequestQueue queue = Volley.newRequestQueue(requireContext());
 
+        JSONObject folderParams = new JSONObject();
+
+        try {
+            folderParams.put("auth_token", auth);
+            folderParams.put("folder_name", folderName);
+            folderParams.put("current_path", MY_FOLDER_PATH + currentPath);
+        } catch (JSONException e) {
+            Log.e("ServerStorage", "Error creating JSON object for folder creation: " + e.getMessage());
+            Toast.makeText(requireContext(), "Error preparing folder creation request", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Log.d("ServerStorage", "Sending folder creation request with parameters: " + folderParams.toString());
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.POST,
+                CREATE_FOLDER_API,
+                folderParams,
+                response -> {
+                    if (response != null) {
+                        try {
+                            Toast.makeText(requireContext(), "Folder creation request sent", Toast.LENGTH_SHORT).show();
+                            fetchFilesFromHostinger(currentPath); // Refresh the folder contents
+                        } catch (Exception e) {
+                            Log.e("ServerStorage", "Error parsing response: " + e.getMessage());
+                            Toast.makeText(requireContext(), "Error processing response", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "No response from server", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    Log.e("ServerStorage", "Error sending folder creation request: " + error.getMessage());
+                    Toast.makeText(requireContext(), "Error Sending Folder Creation Request", Toast.LENGTH_SHORT).show();
+                }
+        );
+
+        queue.add(request);
+    }
 
     public void goBack() {
         if (!folderStack.isEmpty()) {
@@ -242,13 +286,30 @@ public class ServerStorage extends Fragment {
             }
         }
 
+        TextView breadcrumb = new TextView(getContext());
+        breadcrumb.setText("myfolder");
+        breadcrumb.setPadding(8, 20, 8, 20);  // Add some padding
+        breadcrumb.setTextSize(16);
+        breadcrumb.setTextColor(ContextCompat.getColor(getContext(), R.color.purple));
+        breadcrumb.setOnClickListener(v -> {
+            currentPath = "";
+            loadFolder(currentPath);
+        });
+        breadcrumbContainerServer.addView(breadcrumb);
+
+        // Add a separator (e.g., ">") between breadcrumbs
+        TextView separator = new TextView(getContext());
+        separator.setText(">");
+        separator.setPadding(8, 8, 8, 8);
+        breadcrumbContainerServer.addView(separator);
+
         // Iterate over each part and create a clickable TextView for each folder
-        for (int i = startIndex; i < pathParts.length; i++) {
+        for (int i = startIndex + 1; i < pathParts.length; i++) {
             String part = pathParts[i];
 
             if (!part.isEmpty()) {
                 // Create a new TextView for each part of the path
-                TextView breadcrumb = new TextView(getContext());
+                breadcrumb = new TextView(getContext());
                 breadcrumb.setText(part);
                 breadcrumb.setPadding(8, 20, 8, 20);  // Add some padding
                 breadcrumb.setTextSize(16);
@@ -275,13 +336,69 @@ public class ServerStorage extends Fragment {
 
                 // Add a separator (e.g., ">") between breadcrumbs, except for the last one
                 if (i < pathParts.length - 1) {
-                    TextView separator = new TextView(getContext());
+                    separator = new TextView(getContext());
                     separator.setText(">");
                     separator.setPadding(8, 8, 8, 8);
                     breadcrumbContainerServer.addView(separator);
                 }
             }
         }
+
+        // Add the current folder to the breadcrumb
+        breadcrumb = new TextView(getContext());
+        breadcrumb.setText(pathParts[pathParts.length - 1]);
+        breadcrumb.setPadding(8, 20, 8, 20);  // Add some padding
+        breadcrumb.setTextSize(16);
+        breadcrumb.setTextColor(ContextCompat.getColor(getContext(), R.color.purple));
+        breadcrumb.setOnClickListener(v -> {
+            // Do nothing, this is the current folder
+        });
+        breadcrumbContainerServer.addView(breadcrumb);
+    }
+    // Method to preview a file
+    private void previewFile(RecyclerItem item) {
+        if (!item.isDirectory()) {
+            String filePath = DOWNLOAD_URL + item.getFileName();
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(Uri.parse(filePath), getMimeType(item.getFileName()));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                Toast.makeText(requireContext(), "No app found to open this file type", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(requireContext(), "This is a directory, not a file.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Method to get the MIME type of a file
+    private String getMimeType(String fileName) {
+        String mimeType = null;
+        if (fileName.endsWith(".pdf")) {
+            mimeType = "application/pdf";
+        } else if (fileName.endsWith(".docx")) {
+            mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        } else if (fileName.endsWith(".pptx")) {
+            mimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+        } else if (fileName.endsWith(".doc")) {
+            mimeType = "application/msword";
+        } else if (fileName.endsWith(".ppt")) {
+            mimeType = "application/vnd.ms-powerpoint";
+        } else if (fileName.endsWith(".xls")) {
+            mimeType = "application/vnd.ms-excel";
+        } else if (fileName.endsWith(".xlsx")) {
+            mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        } else if (fileName.endsWith(".txt")) {
+            mimeType = "text/plain";
+        } else if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png")) {
+            mimeType = "image/*";
+        } else if (fileName.endsWith(".mp3") || fileName.endsWith(".wav")) {
+            mimeType = "audio/*";
+        } else if (fileName.endsWith(".mp4") || fileName.endsWith(".avi") || fileName.endsWith(".mov")) {
+            mimeType = "video/*";
+        }
+        return mimeType;
     }
     public void loadFolder(String folder) {
         // Only add to the stack if we're not going back to the root
