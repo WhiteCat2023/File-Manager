@@ -5,8 +5,7 @@
     android:layout_height="wrap_content"
     android:backgroundTint="#CDC1FF"
     android:gravity="center"
-    android:orientation="horizontal"
-    android:padding="10dp">
+    android:orientation="horizontal">
 
 
     <androidx.cardview.widget.CardView

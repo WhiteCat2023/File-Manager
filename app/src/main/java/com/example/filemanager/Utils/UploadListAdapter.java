@@ -13,9 +13,8 @@ import com.example.filemanager.R;
 
 import java.util.List;
 
-public class UploadListAdapter extends RecyclerView.Adapter<UploadListAdapter.UploadViewHolder> {
-
-    private final List<UploadItem> uploadItems;
+public class UploadListAdapter extends RecyclerView.Adapter<UploadListAdapter.ViewHolder> {
+    private List<UploadItem> uploadItems;
 
     public UploadListAdapter(List<UploadItem> uploadItems) {
         this.uploadItems = uploadItems;
@@ -23,19 +22,16 @@ public class UploadListAdapter extends RecyclerView.Adapter<UploadListAdapter.Up
 
     @NonNull
     @Override
-    public UploadListAdapter.UploadViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.upload_list_item, parent, false);
-        return new UploadViewHolder(view);
+        return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull UploadListAdapter.UploadViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         UploadItem uploadItem = uploadItems.get(position);
-        holder.fileName.setText(uploadItem.getFileName());
-        holder.fileSize.setText(uploadItem.getFileSize());
-
-        // Show or hide the progress bar based on the progress value
-        holder.progressBar.setVisibility(uploadItem.getProgress() > 0 ? View.VISIBLE : View.GONE);
+        holder.fileNameTextView.setText(uploadItem.getFileName());
+        holder.fileSizeTextView.setText(uploadItem.getFileSize());
         holder.progressBar.setProgress(uploadItem.getProgress());
     }
 
@@ -44,24 +40,21 @@ public class UploadListAdapter extends RecyclerView.Adapter<UploadListAdapter.Up
         return uploadItems.size();
     }
 
-    // ViewHolder class
-    static class UploadViewHolder extends RecyclerView.ViewHolder {
-        TextView fileName, fileSize;
-        ProgressBar progressBar;
-
-        public UploadViewHolder(@NonNull View itemView) {
-            super(itemView);
-            fileName = itemView.findViewById(R.id.uploadFileName);
-            fileSize = itemView.findViewById(R.id.uploadFileSize);
-            progressBar = itemView.findViewById(R.id.progress_bar);
-        }
+    public void updateProgress(int position, int progress) {
+        uploadItems.get(position).setProgress(progress);
+        notifyItemChanged(position);
     }
 
-    // Method to update progress
-    public void updateProgress(int position, int progress) {
-        if (position >= 0 && position < uploadItems.size()) {
-            uploadItems.get(position).setProgress(progress);
-            notifyItemChanged(position);
+    public class ViewHolder extends RecyclerView.ViewHolder {
+        public TextView fileNameTextView;
+        public TextView fileSizeTextView;
+        public ProgressBar progressBar;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            fileNameTextView = itemView.findViewById(R.id.uploadFileName);
+            fileSizeTextView = itemView.findViewById(R.id.uploadFileSize);
+            progressBar = itemView.findViewById(R.id.progress_bar);
         }
     }
 }

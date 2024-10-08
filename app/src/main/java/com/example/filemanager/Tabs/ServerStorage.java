@@ -509,11 +509,11 @@ public class ServerStorage extends Fragment {
             emptyStateTextView.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
         }
-        Log.d("Todo", "Item Count: " + recyclerItems.size());
+        Log.d("SharedTask", "Item Count: " + recyclerItems.size());
     }
     private void handleError(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
-        Log.e("Todo", message);
+        Log.e("SharedTask", message);
         emptyStateImageView.setVisibility(View.VISIBLE);
         emptyStateTextView.setVisibility(View.VISIBLE);
         emptyStateTextView.setText(message);

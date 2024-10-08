@@ -2,6 +2,7 @@ package com.example.filemanager.Utils;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.Paint;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -51,6 +52,14 @@ public class ToDoListAdapter extends RecyclerView.Adapter<ToDoListAdapter.ViewHo
     public void onBindViewHolder(@NonNull ToDoListAdapter.ViewHolder holder, int position) {
         ToDoListItem item = tasks.get(position);
         holder.taskName.setText(item.getTaskName());
+        holder.taskName.setText(item.getStatus());
+
+        // Apply strikethrough if the task is completed
+        if (item.isComplete()) {
+            holder.taskName.setPaintFlags(holder.taskName.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+        } else {
+            holder.taskName.setPaintFlags(holder.taskName.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
+        }
         holder.status.setText(item.getStatus());
         holder.startDate.setText(item.getStartDate());
         holder.endDate.setText(item.getEndDate());
@@ -98,7 +107,7 @@ public class ToDoListAdapter extends RecyclerView.Adapter<ToDoListAdapter.ViewHo
         }catch (JSONException e){
             e.printStackTrace();
             Toast.makeText(context, "Error parsing JSON", Toast.LENGTH_SHORT).show();
-            Log.e("Todo", "JSON parsing error: " + e.getMessage());
+            Log.e("SharedTask", "JSON parsing error: " + e.getMessage());
         }
 
         JsonObjectRequest request = new JsonObjectRequest(

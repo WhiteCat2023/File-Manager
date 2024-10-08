@@ -29,7 +29,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Todo extends Fragment implements ToDoListAdapter.OnDeleteClickListener {
+public class SharedTask extends Fragment implements ToDoListAdapter.OnDeleteClickListener {
 
     private RecyclerView recyclerView;
     private List<ToDoListItem> toDoListItem;
@@ -45,14 +45,14 @@ public class Todo extends Fragment implements ToDoListAdapter.OnDeleteClickListe
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_todo, container, false);
+        View view = inflater.inflate(R.layout.fragment_sharedtask, container, false);
 
         // Initialize views
         emptyStateImageView = view.findViewById(R.id.todoEmptyStateImageView);
         emptyStateTextView = view.findViewById(R.id.todoEmptyStateTextView);
         recyclerView = view.findViewById(R.id.todoRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        newFabTask = view.findViewById(R.id.newFabTask);
+        newFabTask = view.findViewById(R.id.newFabsTasking);
 
         newFabTask.setOnClickListener(v -> {
             Intent intent = new Intent(this.getContext(), NewTask.class);

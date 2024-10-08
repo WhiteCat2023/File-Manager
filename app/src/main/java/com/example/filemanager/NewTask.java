@@ -13,11 +13,14 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.filemanager.Fragments.SharedTask;
 import com.google.android.material.textfield.TextInputEditText;
 
 import org.json.JSONException;
@@ -109,7 +112,7 @@ public class NewTask extends AppCompatActivity {
             jsonBody.put("startDate", startDateInput);
             jsonBody.put("endDate", endDateInput);
         } catch (JSONException e) {
-            Log.e("Todo", "JSON error: " + e.getMessage());
+            Log.e("SharedTask", "JSON error: " + e.getMessage());
             Toast.makeText(this, "Error creating JSON", Toast.LENGTH_SHORT).show();
         }
 
@@ -120,19 +123,18 @@ public class NewTask extends AppCompatActivity {
                         String status = jsonResponse.getString("status");
                         if (status.equals("success")){
                             Toast.makeText(this, "Task added", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(NewTask.this, MainActivity.class);
-                            startActivity(intent);
+                            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SharedTask()).commit();
                         } else {
                             String errorMessage = jsonResponse.optString("message", "Adding task failed");
                             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
                         }
                     }catch (JSONException e){
-                        Log.e("Todo", "JSON parsing error: " + e.getMessage());
+                        Log.e("SharedTask", "JSON parsing error: " + e.getMessage());
                         Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
                     }
                 },
                 error -> {
-                    Log.e("Todo", "Volley error: " + error.getMessage(), error);
+                    Log.e("SharedTask", "Volley error: " + error.getMessage(), error);
                     Toast.makeText(this, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                 }){
             @Override

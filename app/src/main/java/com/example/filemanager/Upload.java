@@ -12,6 +12,7 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -149,7 +150,7 @@ public class Upload extends AppCompatActivity {
     private void uploadFiles(List<Uri> uris) {
         if (isUploading) return;
 
-        int position = uploadItemQueue.size();
+        int position = 0;
 
         isUploading = true;
         RequestQueue queue = Volley.newRequestQueue(this);
@@ -175,9 +176,7 @@ public class Upload extends AppCompatActivity {
                     });
                 }, position,
                 (itemPosition, progress) -> {
-                    // Ensure progress updates the UI on the main thread
-                    Log.d("UploadProgress", "Item Position: " + itemPosition + " Progress: " + progress);
-                    runOnUiThread(() -> uploadAdapter.updateProgress(itemPosition, progress));
+                    uploadAdapter.updateProgress(itemPosition, progress);
                 }) {
 
             @Override
