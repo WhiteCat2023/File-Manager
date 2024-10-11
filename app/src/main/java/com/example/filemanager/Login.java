@@ -86,13 +86,7 @@ public class Login extends AppCompatActivity {
                         String userEmail = jsonResponse.getString("user_email");
 
                         if (status.equals("success")) {
-                            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString(SESSION_EMAIL, userEmail);
-                            editor.putString(SESSION_TOKEN, userToken);
-                            editor.putString(SESSION_POSITION, userPosition);
-                            editor.putString(SESSION_NAME, userName);
-                            editor.apply();
+                            saveInstanceState(userEmail, userToken, userPosition, userName);
 
                             progressDialog.dismiss();
                             Toast.makeText(this, "Login Successful", Toast.LENGTH_SHORT).show();
@@ -131,5 +125,15 @@ public class Login extends AppCompatActivity {
         };
 
         requestQueue.add(stringRequest);
+    }
+
+    private void saveInstanceState(String email, String token, String position, String name) {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(SESSION_EMAIL, email);
+        editor.putString(SESSION_TOKEN, token);
+        editor.putString(SESSION_POSITION, position);
+        editor.putString(SESSION_NAME, name);
+        editor.apply();
     }
 }

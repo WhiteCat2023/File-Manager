@@ -25,7 +25,7 @@
             android:id="@+id/todoTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="ToDo"
+            android:text="Shared Tasks"
             android:textSize="40sp"
             android:paddingTop="30dp"
             android:paddingStart="20dp"

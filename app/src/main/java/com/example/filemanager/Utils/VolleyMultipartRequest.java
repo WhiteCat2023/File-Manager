@@ -17,19 +17,13 @@ public class VolleyMultipartRequest extends Request<NetworkResponse> {
 
     private final Response.Listener<NetworkResponse> mListener;
     private final Map<String, String> headers;
-    private final int itemPosition;
-    private final ProgressListener progressListener;
 
     public VolleyMultipartRequest(int method, String url,
                                   Response.Listener<NetworkResponse> listener,
-                                  Response.ErrorListener errorListener,
-                                  int itemPosition,
-                                  ProgressListener progressListener) {
+                                  Response.ErrorListener errorListener) {
         super(method, url, errorListener);
         this.mListener = listener;
         this.headers = new HashMap<>();
-        this.itemPosition = itemPosition;
-        this.progressListener = progressListener;
     }
 
     @Override
@@ -61,55 +55,6 @@ public class VolleyMultipartRequest extends Request<NetworkResponse> {
         mListener.onResponse(response);
     }
 
-    @Override
-    public byte[] getBody() {
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        CountingOutputStream cos = new CountingOutputStream(bos, (bytesWritten, totalSize) -> {
-            // Calculate the percentage of the file uploaded
-            if (progressListener != null && totalSize > 0) {
-                int progress = (int) ((bytesWritten * 100) / totalSize);
-                progressListener.onProgressUpdate(itemPosition, progress);
-            }
-        });
-
-        try {
-            // Add form fields and file data
-            if (getParams() != null && !getParams().isEmpty()) {
-                for (Map.Entry<String, String> entry : getParams().entrySet()) {
-                    appendFormField(cos, entry.getKey(), entry.getValue());
-                }
-            }
-
-            if (getByteData() != null && !getByteData().isEmpty()) {
-                for (Map.Entry<String, DataPart> entry : getByteData().entrySet()) {
-                    appendFileData(cos, entry.getKey(), entry.getValue());
-                }
-            }
-
-            cos.write(("--" + boundary + "--\r\n").getBytes()); // end of multipart/form-data
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return bos.toByteArray();
-    }
-
-    private void appendFormField(OutputStream os, String name, String value) throws IOException {
-        os.write(("--" + boundary + "\r\n").getBytes());
-        os.write(("Content-Disposition: form-data; name=\"" + name + "\"\r\n").getBytes());
-        os.write(("\r\n").getBytes());
-        os.write((value + "\r\n").getBytes());
-    }
-
-    private void appendFileData(OutputStream os, String name, DataPart dataFile) throws IOException {
-        os.write(("--" + boundary + "\r\n").getBytes());
-        os.write(("Content-Disposition: form-data; name=\"" + name + "\"; filename=\"" + dataFile.getFileName() + "\"\r\n").getBytes());
-        os.write(("Content-Type: application/octet-stream\r\n").getBytes());
-        os.write(("\r\n").getBytes());
-        os.write(dataFile.getData());
-        os.write(("\r\n").getBytes());
-    }
-
     protected Map<String, DataPart> getByteData() {
         return null;
     }
@@ -134,9 +79,6 @@ public class VolleyMultipartRequest extends Request<NetworkResponse> {
         }
     }
 
-    public interface ProgressListener {
-        void onProgressUpdate(int itemPosition, int progress);
-    }
 
     public static class CountingOutputStream extends OutputStream {
         private final OutputStream out;

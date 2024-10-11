@@ -1,6 +1,7 @@
 package com.example.filemanager;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -46,6 +47,8 @@ public class Upload extends AppCompatActivity {
     private UploadListAdapter uploadAdapter;
     private List<Uri> uploadItemQueue;
     private boolean isUploading = false;
+    private ProgressDialog progressDialog;
+    private RequestQueue requestQueue;
 
     ImageView uploadBack;
 
@@ -65,6 +68,8 @@ public class Upload extends AppCompatActivity {
         uploadRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         uploadRecyclerView.setAdapter(uploadAdapter);
 
+        requestQueue = Volley.newRequestQueue(this);
+
         // Handle back button click
         uploadBack.setOnClickListener(v -> {
             Intent intent = new Intent(Upload.this, MainActivity.class);
@@ -77,9 +82,16 @@ public class Upload extends AppCompatActivity {
         // Handle upload button click
         Button uploadButton = findViewById(R.id.btn_upload_file);
         uploadButton.setOnClickListener(v -> {
+            progressDialog = new ProgressDialog(Upload.this);
+            progressDialog.setMessage("Uploading...");
+            progressDialog.setCancelable(false);
             if (!uploadItemQueue.isEmpty()) {
-                uploadFiles(uploadItemQueue); // Start uploading all files in the queue
+                progressDialog.show();
+                uploadFiles(uploadItemQueue);
+
+                // Start uploading all files in the queue
             } else {
+                progressDialog.dismiss();
                 Toast.makeText(Upload.this, "Please select a file first", Toast.LENGTH_SHORT).show();
             }
         });
@@ -117,7 +129,7 @@ public class Upload extends AppCompatActivity {
     // Helper method to add file to the upload list
     private void addFileToUploadList(Uri fileUri) {
         long fileSize = getFileSize(fileUri);
-        selectedUploadItems.add(new UploadItem(getFileName(fileUri), formatFileSize(fileSize), 0));
+        selectedUploadItems.add(new UploadItem(getFileName(fileUri), formatFileSize(fileSize)));
         uploadItemQueue.add(fileUri);
     }
 
@@ -145,20 +157,17 @@ public class Upload extends AppCompatActivity {
         return size;
     }
 
-//On progress pa ang progress bar para sa upload items
     // Upload multiple files to the server
     private void uploadFiles(List<Uri> uris) {
         if (isUploading) return;
 
-        int position = 0;
-
         isUploading = true;
-        RequestQueue queue = Volley.newRequestQueue(this);
 
         // Custom multipart request to handle file upload
         VolleyMultipartRequest uploadRequest = new VolleyMultipartRequest(Request.Method.POST, UPLOAD_URL,
                 response -> {
                     runOnUiThread(() -> {
+                        progressDialog.dismiss();
                         Toast.makeText(Upload.this, "Upload Successful", Toast.LENGTH_SHORT).show();
                         Log.d("Upload", "Response: " + new String(response.data));
 
@@ -171,12 +180,11 @@ public class Upload extends AppCompatActivity {
                 },
                 error -> {
                     runOnUiThread(() -> {
-                        Toast.makeText(Upload.this, "Upload Failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                        progressDialog.dismiss();
+                        Toast.makeText(Upload.this, "Upload Failed" , Toast.LENGTH_SHORT).show();
+                        Log.e("Upload", "Error: "+ error.getMessage());
                         isUploading = false;
                     });
-                }, position,
-                (itemPosition, progress) -> {
-                    uploadAdapter.updateProgress(itemPosition, progress);
                 }) {
 
             @Override
@@ -196,6 +204,7 @@ public class Upload extends AppCompatActivity {
                         inputStream.read(bytes);
                         params.put("file[" + fileName + "]", new DataPart(fileName, bytes));
                     } catch (Exception e) {
+                        progressDialog.dismiss();
                         Log.e("Upload", "Error reading file: " + e.getMessage());
                     }
                 }
@@ -210,9 +219,8 @@ public class Upload extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
         ));
 
-        queue.add(uploadRequest);
+        requestQueue.add(uploadRequest);
     }
-
 
     // Get file name from URI
     private String getFileName(Uri uri) {
