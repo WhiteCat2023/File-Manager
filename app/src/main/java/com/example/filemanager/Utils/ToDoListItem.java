@@ -39,4 +39,11 @@ public class ToDoListItem {
         return startDate;
     }
 
+    public String getDescription() {
+        return status;
+    }
+
+    public void setComplete(boolean b) {
+        this.isComplete = b;
+    }
 }

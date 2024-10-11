@@ -4,8 +4,11 @@
         android:id="@+id/renameInternalItem"
         android:title="Rename" />
 <!--    <item-->
-<!--        android:id="@+id/moveToInternalItem"-->
-<!--        android:title="Move to"/>-->
+<!--        android:id="@+id/moveTo"-->
+<!--        android:title="Move To"/>-->
+<!--    <item-->
+<!--        android:id="@+id/copyTo"-->
+<!--        android:title="Copy To"/>-->
     <item
         android:id="@+id/deleteInternalItem"
         android:title="Delete"/>

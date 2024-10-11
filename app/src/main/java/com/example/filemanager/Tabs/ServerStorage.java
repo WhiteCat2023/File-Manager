@@ -1,19 +1,24 @@
 package com.example.filemanager.Tabs;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
+import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.provider.OpenableColumns;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewStub;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -21,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -28,29 +34,35 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.filemanager.R;
-import com.example.filemanager.Upload;
 import com.example.filemanager.Utils.ServerStorageAdapter;
 import com.example.filemanager.Utils.RecyclerItem;
+import com.example.filemanager.Utils.UploadItem;
+import com.example.filemanager.Utils.VolleyMultipartRequest;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.stream.IntStream;
 
 public class ServerStorage extends Fragment {
     // Initialize variables
@@ -68,18 +80,21 @@ public class ServerStorage extends Fragment {
     private Boolean isAllVisible;
 
 
+
     // Hostinger API endpoint (replace with your actual endpoint)
     private static final String HOSTINGER_API_URL = "https://skcalamba.scarlet2.io/android_api/hostinger_api.php";
-    private static final String DOWNLOAD_URL = "https://skcalamba.scarlet2.io/android_api/public_html/myfolder/";
+    private static final String DOWNLOAD_URL = "https://skcalamba.scarlet2.io/android_api/uploads/";
     private static final String FILE_DELETE_URL = "https://skcalamba.scarlet2.io/android_api/delete_file.php";
     private static final String CREATE_FOLDER_API = "https://skcalamba.scarlet2.io/createFolder.php";
 
     // Define the folder name for internal storage
     private static final String DOWNLOAD_FOLDER_NAME = "MyDownloads";
 
-    private static final String MY_FOLDER_PATH = "./android_api/public_html/myfolder/";
+    private static final String MY_FOLDER_PATH = "./android_api/uploads/";
+    private static final String ROOT_FOLDER_PATH = "./";
 
     private String auth = "bf4edef043130d19e11048aab68d4c512b62d2de1d000514b65410876e9a96f2";
+    private String uploadAuth = "Ramsey";
     private String currentPath = "";
     private Stack<String> folderStack;
 
@@ -87,13 +102,26 @@ public class ServerStorage extends Fragment {
     private static final String SESSION_EMAIL = "user_email";
     private static final String SERVER_STORAGE_CURRENT_PATH = "server_storage_current_path";
 
-    public static int startIndex = 0;
+    private static final int PICK_FILE_REQUEST = 0;
+    private static final String UPLOAD_URL = "https://skcalamba.scarlet2.io/android_api/upload.php";
 
+    private boolean isUploading = false;
+    private ProgressDialog progressDialog;
+    private RequestQueue requestQueue;
+
+    private List<UploadItem> selectedUploadItems;
+    private List<Uri> uploadItemQueue;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout
         View view = inflater.inflate(R.layout.fragment_server_storage, container, false);
+
+        progressDialog = new ProgressDialog(requireContext());
+        progressDialog.setCancelable(false);
+
+        selectedUploadItems = new ArrayList<>();
+        uploadItemQueue = new ArrayList<>();
 
         emptyStateImageView = view.findViewById(R.id.externalImageView);
         emptyStateTextView = view.findViewById(R.id.externalTextView);
@@ -101,6 +129,7 @@ public class ServerStorage extends Fragment {
         horizontalScrollView = view.findViewById(R.id.serverHorizontalScrollView);
 
         breadcrumbContainerServer = view.findViewById(R.id.breadcrumb_container_server);
+        requestQueue = Volley.newRequestQueue(this.requireContext());
 
 //        Fabs
         addFabServer = view.findViewById(R.id.fabServer);
@@ -109,7 +138,6 @@ public class ServerStorage extends Fragment {
 
         uploadFilesFabTextView = view.findViewById(R.id.uploadFilesTextView);
         newServerFolderFabTextView = view.findViewById(R.id.newServerFolderTextView);
-
 
         isAllVisible = false;
 
@@ -178,9 +206,7 @@ public class ServerStorage extends Fragment {
                 isAllVisible = true;
 
                 uploadFilesFab.setOnClickListener(v1 -> {
-                   Intent intent = new Intent(getContext(), Upload.class);
-                   startActivity(intent);
-                   addFabServer.hide();
+                   openFileChooser();
                 });
                 newServerFolderFab.setOnClickListener(v1 -> {
 
@@ -212,6 +238,249 @@ public class ServerStorage extends Fragment {
         return view;
     }
 
+    // Handle file selection
+    private void openFileChooser() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        startActivityForResult(Intent.createChooser(intent, "Select File"), PICK_FILE_REQUEST);
+    }
+    // Handle result of file selection
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_FILE_REQUEST && resultCode == Activity.RESULT_OK) {
+            if (data != null) {
+                if (data.getClipData() != null) {
+                    int count = data.getClipData().getItemCount();
+                    for (int i = 0; i < count; i++) {
+                        Uri fileUri = data.getClipData().getItemAt(i).getUri();
+                        addFileToUploadList(fileUri);
+                    }
+                } else if (data.getData() != null) {
+                    Uri fileUri = data.getData();
+                    addFileToUploadList(fileUri);
+                }
+            }
+            // After adding files to the upload list, trigger the upload
+            if (!uploadItemQueue.isEmpty()) {
+                uploadFiles(uploadItemQueue); // Call uploadFiles here
+            } else {
+                Toast.makeText(requireContext(), "No files selected for upload", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+    //    // Upload multiple files to the server
+    //    private void uploadFiles(List<Uri> uris) {
+    //        if (isUploading) return;
+    //
+    //        isUploading = true;
+    //        progressDialog.setTitle("Uploading Files");
+    //        progressDialog.setMessage("Please wait...");
+    //        progressDialog.show();
+    //
+    //        VolleyMultipartRequest uploadRequest = new VolleyMultipartRequest(Request.Method.POST, UPLOAD_URL,
+    //                response -> {
+    //                    progressDialog.dismiss();
+    //                    String responseString = new String(response.data);
+    //                    Log.d("Upload", "Response: " + responseString);
+    //
+    //                    try {
+    //                        JSONObject jsonResponse = new JSONObject(responseString);
+    //                        String status = jsonResponse.getString("status");
+    //                        String message = jsonResponse.getString("message");
+    //                        if (status.equals("success")) {
+    //                            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+    //                        } else {
+    //                            Toast.makeText(requireContext(), "Upload Failed: " + message, Toast.LENGTH_SHORT).show();
+    //                        }
+    //                    } catch (JSONException e) {
+    //                        Log.e("Upload", "JSON Error: " + e.getMessage());
+    //                    }
+    //
+    //                    uploadItemQueue.clear();
+    //                    selectedUploadItems.clear();
+    //                    isUploading = false;
+    //                },
+    //                error -> {
+    //                    progressDialog.dismiss();
+    //                    Toast.makeText(requireContext(), "Upload Failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+    //                    Log.e("Upload", "Error: " + error.getMessage());
+    //                    isUploading = false;
+    //                }) {
+    //
+    //            @Override
+    //            protected Map<String, String> getParams() {
+    //                Map<String, String> params = new HashMap<>();
+    //                params.put("folder_path", currentPath.isEmpty() ? MY_FOLDER_PATH : currentPath);
+    //                params.put("auth_token", uploadAuth);
+    //                return params;
+    //            }
+    //
+    //            @Override
+    //            protected Map<String, DataPart> getByteData() {
+    //                Map<String, DataPart> params = new HashMap<>();
+    //                for (Uri uri : uris) {
+    //                    String fileName = getFileName(uri);
+    //                    try (InputStream inputStream = requireContext().getContentResolver().openInputStream(uri)) {
+    //                        if (inputStream != null) {
+    //                            byte[] bytes = new byte[inputStream.available()];
+    //                            inputStream.read(bytes);
+    //                            Log.d("Upload", "Uploading file: " + fileName + " Size: " + bytes.length + " bytes");
+    //                            params.put("file[]", new DataPart(fileName, bytes));  // Use "file[]" as the key
+    //                        } else {
+    //                            Log.e("Upload", "InputStream is null for URI: " + uri.toString());
+    //                        }
+    //                    } catch (Exception e) {
+    //                        Log.e("Upload", "Error reading file: " + e.getMessage());
+    //                    }
+    //                }
+    //                return params;
+    //            }
+    //
+    //        };
+    //
+    //        uploadRequest.setRetryPolicy(new DefaultRetryPolicy(
+    //                30000,
+    //                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+    //                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+    //        ));
+    //
+    //        requestQueue.add(uploadRequest);
+    //    }
+    private void uploadFiles(List<Uri> uris) {
+        if (isUploading) return;
+
+        isUploading = true;
+        progressDialog.setTitle("Uploading Files");
+        progressDialog.setMessage("Please wait...");
+        progressDialog.show();
+
+        // Prepare the JSON object to send
+        JSONObject jsonRequest = new JSONObject();
+        JSONArray filesArray = new JSONArray();  // To hold the file data
+
+        try {
+            jsonRequest.put("folder_path", currentPath.isEmpty() ? ROOT_FOLDER_PATH : currentPath);
+            jsonRequest.put("auth_token", uploadAuth);
+
+            for (Uri uri : uris) {
+                String fileName = getFileName(uri);
+
+                // Convert file to Base64
+                try (InputStream inputStream = requireContext().getContentResolver().openInputStream(uri)) {
+                    if (inputStream != null) {
+                        byte[] bytes = new byte[inputStream.available()];
+                        inputStream.read(bytes);
+
+                        // Encode file to Base64 string
+                        String encodedFile = Base64.encodeToString(bytes, Base64.DEFAULT);
+
+                        // Create JSON object for each file
+                        JSONObject fileObject = new JSONObject();
+                        fileObject.put("file_name", fileName);
+                        fileObject.put("file_data", encodedFile);
+
+                        // Add file object to files array
+                        filesArray.put(fileObject);
+
+                        Log.d("Upload", "Prepared file: " + fileName + " Size: " + bytes.length + " bytes");
+                    } else {
+                        Log.e("Upload", "InputStream is null for URI: " + uri.toString());
+                    }
+                } catch (Exception e) {
+                    Log.e("Upload", "Error reading file: " + e.getMessage());
+                }
+            }
+
+            // Attach files array to the main JSON request
+            jsonRequest.put("files", filesArray);
+
+        } catch (JSONException e) {
+            Log.e("Upload", "JSON Error: " + e.getMessage());
+        }
+
+        // Create a JsonObjectRequest to send the request
+        JsonObjectRequest uploadRequest = new JsonObjectRequest(Request.Method.POST, UPLOAD_URL, jsonRequest,
+                response -> {
+                    progressDialog.dismiss();
+                    try {
+                        String status = response.getString("status");
+                        String message = response.getString("message");
+                        if (status.equals("success")) {
+                            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(requireContext(), "Upload Failed: " + message, Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (JSONException e) {
+                        Log.e("Upload", "JSON Error: " + e.getMessage());
+                    }
+
+                    uploadItemQueue.clear();
+                    selectedUploadItems.clear();
+                    isUploading = false;
+                },
+                error -> {
+                    progressDialog.dismiss();
+                    Toast.makeText(requireContext(), "Upload Failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e("Upload", "Error: " + error.getMessage());
+                    isUploading = false;
+                });
+
+        uploadRequest.setRetryPolicy(new DefaultRetryPolicy(
+                30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
+
+        requestQueue.add(uploadRequest);
+    }
+    // Helper method to add file to the upload list
+    private void addFileToUploadList(Uri fileUri) {
+        long fileSize = getFileSize(fileUri);
+        selectedUploadItems.add(new UploadItem(getFileName(fileUri), formatFileSize(fileSize)));
+        uploadItemQueue.add(fileUri);
+    }
+    private long getFileSize(Uri uri) {
+        long size = 0;
+        if (uri.getScheme().equals("content")) {
+            try (Cursor cursor = requireContext().getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                    if (sizeIndex != -1) {
+                        size = cursor.getLong(sizeIndex);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return size;
+    }
+    private String getFileName(Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            try (Cursor cursor = requireContext().getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (nameIndex != -1) {
+                        result = cursor.getString(nameIndex);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result != null ? result : "unknown_file";
+    }
+    // Handle result of file selection
     private void createFolder(String folderName) {
         RequestQueue queue = Volley.newRequestQueue(requireContext());
 
@@ -254,7 +523,6 @@ public class ServerStorage extends Fragment {
 
         queue.add(request);
     }
-
     public void goBack() {
         if (!folderStack.isEmpty()) {
             currentPath = folderStack.pop(); // Go back to the previous folder
@@ -265,8 +533,8 @@ public class ServerStorage extends Fragment {
             Toast.makeText(requireContext(), "No more folders to go back to", Toast.LENGTH_SHORT).show();
         }
     }
-    private void updateBreadcrumbs() {
-        // Clear existing breadcrumbs
+
+    public void updateBreadcrumbs(){
         breadcrumbContainerServer.removeAllViews();
 
         // Ensure currentPath is not null or empty
@@ -277,85 +545,64 @@ public class ServerStorage extends Fragment {
         // Split the current path into parts
         String[] pathParts = currentPath.split("/");
 
-        // Find the index of the "myfolder" folder
-        int startIndex = 0;
-        for (int i = 0; i < pathParts.length; i++) {
-            if (pathParts[i].equals("myfolder")) {
-                startIndex = i; // Start breadcrumb from "myfolder"
-                break;
-            }
-        }
-
-        TextView breadcrumb = new TextView(getContext());
-        breadcrumb.setText("myfolder");
-        breadcrumb.setPadding(8, 20, 8, 20);  // Add some padding
-        breadcrumb.setTextSize(16);
-        breadcrumb.setTextColor(ContextCompat.getColor(getContext(), R.color.purple));
-        breadcrumb.setOnClickListener(v -> {
-            currentPath = "";
-            loadFolder(currentPath);
+        TextView rootBreadcrumb = new TextView(requireContext());
+        rootBreadcrumb.setText("Root"); // Display "/" for the root
+        rootBreadcrumb.setPadding(8, 20, 8, 20);
+        rootBreadcrumb.setTextSize(16);
+        rootBreadcrumb.setTextColor(ContextCompat.getColor(getContext(), R.color.purple));
+        rootBreadcrumb.setOnClickListener(v -> {
+            // Navigate to root when clicked
+            navigateToBreadcrumb(-1, pathParts); // Assuming index 0 represents root
         });
-        breadcrumbContainerServer.addView(breadcrumb);
+        breadcrumbContainerServer.addView(rootBreadcrumb);
+        TextView separators = new TextView(requireContext());
+        separators.setText(" > ");
+        separators.setPadding(4, 8, 4, 8);
+        breadcrumbContainerServer.addView(separators);
 
-        // Add a separator (e.g., ">") between breadcrumbs
-        TextView separator = new TextView(getContext());
-        separator.setText(">");
-        separator.setPadding(8, 8, 8, 8);
-        breadcrumbContainerServer.addView(separator);
+        StringBuilder currentPathBuilder = new StringBuilder();
+        for (int i = 0; i < pathParts.length; i++ ){
+            final int index = i;
+            String folderName = pathParts[i];
+// Add the root folder breadcrumb
 
-        // Iterate over each part and create a clickable TextView for each folder
-        for (int i = startIndex + 1; i < pathParts.length; i++) {
-            String part = pathParts[i];
+            if (!folderName.isEmpty()){
+                    currentPathBuilder.append("/").append(folderName);
 
-            if (!part.isEmpty()) {
-                // Create a new TextView for each part of the path
-                breadcrumb = new TextView(getContext());
-                breadcrumb.setText(part);
-                breadcrumb.setPadding(8, 20, 8, 20);  // Add some padding
-                breadcrumb.setTextSize(16);
+                    TextView breadcrumb = new TextView(requireContext());
+                    breadcrumb.setText(folderName);
+                    breadcrumb.setPadding(8, 20, 8, 20);  // Add some padding
+                    breadcrumb.setTextSize(16);
+                    breadcrumb.setTextColor(ContextCompat.getColor(getContext(), R.color.purple));
 
-                // Use ContextCompat for fetching color to avoid deprecated methods
-                breadcrumb.setTextColor(ContextCompat.getColor(getContext(), R.color.purple));
+                    breadcrumb.setOnClickListener(v -> {
+                        navigateToBreadcrumb(index, pathParts);
 
-                // Make the breadcrumb clickable
-                final int index = i;  // Capture the index for the click listener
-                breadcrumb.setOnClickListener(v -> {
-                    // Rebuild the path based on the clicked breadcrumb
-                    StringBuilder newPath = new StringBuilder();
-                    for (int j = 0; j <= index; j++) {
-                        if (!pathParts[j].isEmpty()) {
-                            newPath.append(pathParts[j]).append("/");
-                        }
+                    });
+
+                    breadcrumbContainerServer.addView(breadcrumb);
+
+                    if (i < pathParts.length - 1 && !pathParts[i + 1].equals(ROOT_FOLDER_PATH)){
+                        TextView separator = new TextView(requireContext());
+                        separator.setText(" > ");
+                        separator.setPadding(4, 8, 4, 8);
+                        breadcrumbContainerServer.addView(separator);
                     }
-                    currentPath = newPath.toString();
-                    loadFolder(currentPath);  // Load the folder corresponding to the clicked breadcrumb
-                });
-
-                // Add the breadcrumb to the container
-                breadcrumbContainerServer.addView(breadcrumb);
-
-                // Add a separator (e.g., ">") between breadcrumbs, except for the last one
-                if (i < pathParts.length - 1) {
-                    separator = new TextView(getContext());
-                    separator.setText(">");
-                    separator.setPadding(8, 8, 8, 8);
-                    breadcrumbContainerServer.addView(separator);
-                }
             }
         }
-
-        // Add the current folder to the breadcrumb
-        breadcrumb = new TextView(getContext());
-        breadcrumb.setText(pathParts[pathParts.length - 1]);
-        breadcrumb.setPadding(8, 20, 8, 20);  // Add some padding
-        breadcrumb.setTextSize(16);
-        breadcrumb.setTextColor(ContextCompat.getColor(getContext(), R.color.purple));
-        breadcrumb.setOnClickListener(v -> {
-            // Do nothing, this is the current folder
-        });
-        breadcrumbContainerServer.addView(breadcrumb);
     }
-    // Method to preview a file
+    private void navigateToBreadcrumb(int index, String[] pathParts) {
+        folderStack.clear();
+        StringBuilder newPath = new StringBuilder();
+        for (int j = 0; j <= index; j++) {
+            if (!pathParts[j].isEmpty()) {
+                newPath.append(pathParts[j]).append("/");
+            }
+        }
+        currentPath = newPath.toString();
+        loadFolder(currentPath);  // Load the folder corresponding to the clicked breadcrumb
+    }
+
     private void previewFile(RecyclerItem item) {
         if (!item.isDirectory()) {
             String filePath = DOWNLOAD_URL + item.getFileName();
@@ -371,7 +618,6 @@ public class ServerStorage extends Fragment {
             Toast.makeText(requireContext(), "This is a directory, not a file.", Toast.LENGTH_SHORT).show();
         }
     }
-
     // Method to get the MIME type of a file
     private String getMimeType(String fileName) {
         String mimeType = null;

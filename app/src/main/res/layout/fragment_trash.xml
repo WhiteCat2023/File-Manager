@@ -18,7 +18,7 @@
     <ImageView
         android:id="@+id/trashImageView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="150dp"
         app:srcCompat="@drawable/no_files"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"

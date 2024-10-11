@@ -99,6 +99,33 @@
             android:layout_marginEnd="10dp"
             android:visibility="gone"/>
 
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/importFiles"
+            app:srcCompat="@drawable/baseline_create_new_folder_24"
+            android:layout_width="40dp"
+            app:fabCustomSize="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="20dp"
+            app:layout_constraintBottom_toTopOf="@id/newLocalFolder"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:visibility="gone"/>
+        <TextView
+            android:padding="10dp"
+            android:background="@drawable/white_bg"
+            android:id="@+id/importTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Import"
+            app:layout_constraintTop_toTopOf="@id/importFiles"
+            app:layout_constraintBottom_toBottomOf="@id/importFiles"
+            app:layout_constraintEnd_toStartOf="@id/importFiles"
+            android:layout_marginEnd="10dp"
+            android:visibility="gone"/>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </RelativeLayout>

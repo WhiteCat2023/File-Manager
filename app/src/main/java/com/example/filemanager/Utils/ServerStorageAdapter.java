@@ -1,5 +1,6 @@
 package com.example.filemanager.Utils;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -55,7 +56,7 @@ public class ServerStorageAdapter extends RecyclerView.Adapter<ServerStorageAdap
 
         // Change icon based on whether the item is a directory or a file
         if (item.isDirectory()) {
-            holder.icon.setImageResource(R.drawable.ic_folder);
+            holder.icon.setImageResource(R.drawable.c_folder);
             holder.fileToolbar.setOnClickListener(view -> {
                 PopupMenu popupMenu = new PopupMenu(view.getContext(), holder.fileToolbar);
                 popupMenu.inflate(R.menu.server_item_directory);
@@ -71,7 +72,7 @@ public class ServerStorageAdapter extends RecyclerView.Adapter<ServerStorageAdap
                 popupMenu.show();
             });
         } else {
-            holder.icon.setImageResource(R.drawable.ic_file);
+            openFile(item, holder);
             // Set up the toolbar click to show the popup menu
             holder.fileToolbar.setOnClickListener(view -> {
                 PopupMenu popupMenu = new PopupMenu(view.getContext(), holder.fileToolbar);
@@ -109,6 +110,62 @@ public class ServerStorageAdapter extends RecyclerView.Adapter<ServerStorageAdap
     @Override
     public int getItemCount() {
         return recyclerItems.size();
+    }
+
+    // Method to open the file with the appropriate viewer
+    private void openFile(RecyclerItem item, @NonNull ViewHolder holder) {
+        if (item == null || item.getFileName() == null) {
+            Log.e("InternalStorage", "Invalid file.");
+            return;
+        }
+
+        String fileName = item.getFileName();
+        String fileExtension = getFileExtension(fileName);
+
+        // Determine the appropriate file reader based on the file type
+        switch (fileExtension) {
+            case "pdf":
+                holder.icon.setImageResource(R.drawable.c_pdf);
+                break;
+            case "txt":
+                holder.icon.setImageResource(R.drawable.c_txt);
+                break;
+            case "doc":
+            case "docx":
+                holder.icon.setImageResource(R.drawable.c_doc);
+                break;
+            case "xls":
+            case "xlsx":
+                holder.icon.setImageResource(R.drawable.c_xls);
+                break;
+            case "ppt":
+            case "pptx":
+                holder.icon.setImageResource(R.drawable.c_ppt);
+                break;
+            case "jpg":
+            case "jpeg":
+                holder.icon.setImageResource(R.drawable.jpg);
+                break;
+            case "png":
+                holder.icon.setImageResource(R.drawable.c_png);
+                break;
+            case "mp3":
+                holder.icon.setImageResource(R.drawable.c_mp3);
+                break;
+            case "mp4":
+                holder.icon.setImageResource(R.drawable.c_mp4);
+                break;
+            default:
+                holder.icon.setImageResource(R.drawable.c_file);
+                break;
+        }
+    }
+    // Method to get the file extension
+    private String getFileExtension(String fileName) {
+        if (fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0) {
+            return fileName.substring(fileName.lastIndexOf(".") + 1);
+        }
+        return "";
     }
 
     // Provide a reference to the type of views being used (custom ViewHolder)

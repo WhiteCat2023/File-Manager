@@ -32,7 +32,7 @@ public class UploadListAdapter extends RecyclerView.Adapter<UploadListAdapter.Vi
         UploadItem uploadItem = uploadItems.get(position);
         holder.fileNameTextView.setText(uploadItem.getFileName());
         holder.fileSizeTextView.setText(uploadItem.getFileSize());
-        holder.progressBar.setProgress(uploadItem.getProgress());
+
     }
 
     @Override
@@ -41,7 +41,6 @@ public class UploadListAdapter extends RecyclerView.Adapter<UploadListAdapter.Vi
     }
 
     public void updateProgress(int position, int progress) {
-        uploadItems.get(position).setProgress(progress);
         notifyItemChanged(position);
     }
 
@@ -54,7 +53,6 @@ public class UploadListAdapter extends RecyclerView.Adapter<UploadListAdapter.Vi
             super(itemView);
             fileNameTextView = itemView.findViewById(R.id.uploadFileName);
             fileSizeTextView = itemView.findViewById(R.id.uploadFileSize);
-            progressBar = itemView.findViewById(R.id.progress_bar);
         }
     }
 }

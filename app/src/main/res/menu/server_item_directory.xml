@@ -3,6 +3,12 @@
     <item
         android:id="@+id/rename"
         android:title="Rename" />
+<!--    <item-->
+<!--        android:id="@+id/serverMoveTo"-->
+<!--        android:title="Move To"/>-->
+<!--    <item-->
+<!--        android:id="@+id/serverCopyToo"-->
+<!--        android:title="Copy To"/>-->
     <item
         android:id="@+id/delete"
         android:title="Delete"/>

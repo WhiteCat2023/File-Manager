@@ -16,7 +16,7 @@
         android:id="@+id/todoTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="New Todo"
+        android:text="New Task"
         android:textSize="40dp"
         android:layout_marginTop="56dp"
         android:layout_marginBottom="20dp"/>

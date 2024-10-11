@@ -47,27 +47,25 @@ public class Login extends AppCompatActivity {
         btnLogin.setOnClickListener(v -> {
             String email = etEmail.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
-            login(email, password);
-            progressDialog = new ProgressDialog(Login.this);
-            progressDialog.setMessage("Logging in...");
-            progressDialog.show();
+            if (!email.isEmpty() && !password.isEmpty()) {
+                progressDialog = new ProgressDialog(Login.this);
+                progressDialog.setMessage("Logging in...");
+                progressDialog.show();
+                login(email, password);
+            } else {
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
     private void login(String email, String password) {
-        if (email.isEmpty() || password.isEmpty()) {
-            progressDialog.dismiss();
-            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("email", email);
             jsonBody.put("password", password);
         } catch (JSONException e) {
             Log.e("Login", "JSON error: " + e.getMessage());
-            progressDialog.dismiss();
+            dismissProgressDialog();
             Toast.makeText(this, "Error creating JSON", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -77,41 +75,34 @@ public class Login extends AppCompatActivity {
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 response -> {
                     try {
-                        Log.d("Login", "Response: " + response); // Log the raw response for debugging
+                        Log.d("Login", "Response: " + response);
                         JSONObject jsonResponse = new JSONObject(response);
                         String status = jsonResponse.getString("status");
-                        String userToken = jsonResponse.getString("user_id");
-                        String userPosition = jsonResponse.getString("user_position");
-                        String userName = jsonResponse.getString("user_name");
-                        String userEmail = jsonResponse.getString("user_email");
+                        String message = jsonResponse.getString("message");
+                        String userToken = jsonResponse.optString("user_id", "");
+                        String userPosition = jsonResponse.optString("user_position", "");
+                        String userName = jsonResponse.optString("user_name", "");
+                        String userEmail = jsonResponse.optString("user_email", "");
 
                         if (status.equals("success")) {
-                            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString(SESSION_EMAIL, userEmail);
-                            editor.putString(SESSION_TOKEN, userToken);
-                            editor.putString(SESSION_POSITION, userPosition);
-                            editor.putString(SESSION_NAME, userName);
-                            editor.apply();
-
-                            progressDialog.dismiss();
+                            saveInstanceState(userEmail, userToken, userPosition, userName);
+                            dismissProgressDialog();
                             Toast.makeText(this, "Login Successful", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(Login.this, MainActivity.class);
                             startActivity(intent);
                             finish();
                         } else {
-                            progressDialog.dismiss();
-                            String errorMessage = jsonResponse.optString("message", "Authentication failed");
-                            Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+                            dismissProgressDialog();
+                            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
                         }
                     } catch (JSONException e) {
-                        progressDialog.dismiss();
+                        dismissProgressDialog();
                         Log.e("Login", "JSON parsing error: " + e.getMessage());
                         Toast.makeText(this, "Login failed: Invalid server response", Toast.LENGTH_SHORT).show();
                     }
                 },
                 error -> {
-                    progressDialog.dismiss();
+                    dismissProgressDialog();
                     Log.e("Login", "Volley error: " + error.toString());
                     if (error.networkResponse != null) {
                         Log.e("Login", "Status Code: " + error.networkResponse.statusCode);
@@ -131,5 +122,21 @@ public class Login extends AppCompatActivity {
         };
 
         requestQueue.add(stringRequest);
+    }
+
+    private void saveInstanceState(String email, String token, String position, String name) {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(SESSION_EMAIL, email);
+        editor.putString(SESSION_TOKEN, token);
+        editor.putString(SESSION_POSITION, position);
+        editor.putString(SESSION_NAME, name);
+        editor.apply();
+    }
+
+    private void dismissProgressDialog() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
     }
 }

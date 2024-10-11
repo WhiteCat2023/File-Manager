@@ -1,5 +1,6 @@
 package com.example.filemanager;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -71,6 +72,16 @@ public class Trash extends Fragment {
             public void onDeleteClick(RecyclerItem item) {
                 deleteDeletedFile(item);
             }
+
+            @Override
+            public void onRestoreFolderClick(RecyclerItem item) {
+                restoreFolder(item);
+            }
+
+            @Override
+            public void onDeleteFolderClick(RecyclerItem item) {
+                deleteFolder(item);
+            }
         });
         recyclerView.setAdapter(adapter);
 
@@ -87,6 +98,115 @@ public class Trash extends Fragment {
 
         return view;
     }
+
+    private void restoreFolder(RecyclerItem item) {
+        // Define paths
+        File trashFolder = new File(requireContext().getExternalFilesDir(null), TRASH_FOLDER_NAME);
+        File folderToRestore = new File(trashFolder, item.getFileName());
+
+        // Metadata folder
+        File metadataFolder = new File(requireContext().getExternalFilesDir(null), METADATA_FOLDER_NAME);
+        File metadataFile = new File(metadataFolder, item.getFileName() + ".json");
+
+        // Load the original path from the metadata file
+        String originalPath = null;
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(metadataFile));
+            StringBuilder json = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                json.append(line);
+            }
+            reader.close();
+
+            JSONObject metadata = new JSONObject(json.toString());
+            originalPath = metadata.getString("originalPath");
+        } catch (Exception e) {
+            Log.e("RestoreFolder", "Error reading metadata: " + e.getMessage());
+            Toast.makeText(requireContext(), "Error reading metadata.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // New destination in MyDownloads
+        File downloadsFolder = new File(requireContext().getExternalFilesDir(null), "MyDownloads");
+        File restoredFolder = new File(downloadsFolder, folderToRestore.getName());
+
+        // Log the paths for debugging
+        Log.d("RestoreFolder", "Restoring folder to: " + restoredFolder.getAbsolutePath());
+
+        if (restoredFolder.exists()) {
+            Toast.makeText(requireContext(), "Folder already exists in MyDownloads.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Attempt to move the folder
+        if (folderToRestore.renameTo(restoredFolder)) {
+            Toast.makeText(requireContext(), "Folder restored successfully", Toast.LENGTH_SHORT).show();
+            deletedItems.remove(item);
+            adapter.notifyDataSetChanged();
+
+            // Delete metadata after restoring
+            if (metadataFile.exists()) {
+                metadataFile.delete();
+            }
+        } else {
+            Log.e("RestoreFolder", "Failed to restore folder");
+            Toast.makeText(requireContext(), "Failed to restore folder", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void deleteFolder(RecyclerItem item) {
+        // Define paths
+        File trashFolder = new File(requireContext().getExternalFilesDir(null), TRASH_FOLDER_NAME);
+        File folderToDelete = new File(trashFolder, item.getFileName());
+
+        // Metadata folder
+        File metadataFolder = new File(requireContext().getExternalFilesDir(null), METADATA_FOLDER_NAME);
+        File metadataFile = new File(metadataFolder, item.getFileName() + ".json");
+
+        if (folderToDelete.exists()) {
+            // Confirm deletion
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Delete Folder")
+                    .setMessage("Are you sure you want to delete this folder and all its contents?")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        deleteFolderRecursively(folderToDelete);
+
+                        // Check if metadata exists and delete it
+                        if (metadataFile.exists()) {
+                            if (metadataFile.delete()) {
+                                Log.d("Trash", "Deleted metadata for folder: " + item.getFileName());
+                            } else {
+                                Log.e("Trash", "Failed to delete metadata for folder: " + item.getFileName());
+                            }
+                        }
+
+                        Toast.makeText(requireContext(), "Folder deleted successfully", Toast.LENGTH_SHORT).show();
+                        deletedItems.remove(item);
+                        adapter.notifyDataSetChanged();
+                    })
+                    .setNegativeButton("No", null)
+                    .show();
+        } else {
+            Toast.makeText(requireContext(), "Folder does not exist", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Recursive folder deletion method
+    private void deleteFolderRecursively(File folder) {
+        File[] files = folder.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteFolderRecursively(file); // Recursive call for subdirectories
+                }
+                file.delete(); // Delete the file
+            }
+        }
+        folder.delete(); // Finally, delete the folder itself
+    }
+
+
 
     // Method to create Trash folder if it doesn't exist
     private void createTrashFolderIfNeeded() {

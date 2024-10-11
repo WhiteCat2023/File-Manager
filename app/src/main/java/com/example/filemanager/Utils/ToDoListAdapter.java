@@ -52,7 +52,6 @@ public class ToDoListAdapter extends RecyclerView.Adapter<ToDoListAdapter.ViewHo
     public void onBindViewHolder(@NonNull ToDoListAdapter.ViewHolder holder, int position) {
         ToDoListItem item = tasks.get(position);
         holder.taskName.setText(item.getTaskName());
-        holder.taskName.setText(item.getStatus());
 
         // Apply strikethrough if the task is completed
         if (item.isComplete()) {
@@ -60,17 +59,29 @@ public class ToDoListAdapter extends RecyclerView.Adapter<ToDoListAdapter.ViewHo
         } else {
             holder.taskName.setPaintFlags(holder.taskName.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
         }
+
         holder.status.setText(item.getStatus());
         holder.startDate.setText(item.getStartDate());
         holder.endDate.setText(item.getEndDate());
         holder.isComplete.setChecked(item.isComplete());
+
+        // Update the strikethrough based on checkbox state
         holder.isComplete.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
-                onDeleteClickListener.onDeleteClick(position);
+                holder.taskName.setPaintFlags(holder.taskName.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                item.setComplete(true);  // Update the task completion status
+            } else {
+                holder.taskName.setPaintFlags(holder.taskName.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
+                item.setComplete(false);  // Update the task completion status
             }
+
+            // Optionally, update the task's completion status in the database here
+            // updateTaskCompletion(item.getTaskId(), isChecked, buttonView.getContext());
         });
-        holder.optionMenu.setOnClickListener(v -> showPopupMenu(v , position));
+
+        holder.optionMenu.setOnClickListener(v -> showPopupMenu(v, position));
     }
+
 
     private void showPopupMenu(View view, int position) {
         // Creating a popup menu

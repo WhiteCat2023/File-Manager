@@ -1,9 +1,13 @@
 package com.example.filemanager.Tabs;
 
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ClipData;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,29 +18,34 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.example.filemanager.ChooseDestinationActivity;
 import com.example.filemanager.R;
-import com.example.filemanager.Trash;
 import com.example.filemanager.Utils.InternalStorageAdapter;
 import com.example.filemanager.Utils.RecyclerItem;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
-
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Stack;
+
 
 public class InternalStorage extends Fragment {
 
@@ -49,15 +58,18 @@ public class InternalStorage extends Fragment {
     private TextView emptyStateTextView;
     // Define the folder name for internal storage
     private static final String DOWNLOAD_FOLDER_NAME = "MyDownloads";
+    private static final int REQUEST_CODE_COPY_TO = 0;
     private File currentDirectory;
     private List<RecyclerItem> deletedItems;
     private LinearLayout breadcrumbContainer;
 
-    private TextView newLocalFolderTextView;
-    private FloatingActionButton newLocalFolder, fabInternal;
+    private TextView newLocalFolderTextView, importFilesTexView;
+    private FloatingActionButton newLocalFolder, fabInternal, importFiles;
     private Boolean isAllVisible;
 
     private Stack<String> folderStack;
+
+    private ActivityResultLauncher<Intent> filePickerLauncher;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -71,7 +83,9 @@ public class InternalStorage extends Fragment {
 
         //Fab
         newLocalFolder = view.findViewById(R.id.newLocalFolder);
+        importFiles = view.findViewById(R.id.importFiles);
         newLocalFolderTextView = view.findViewById(R.id.newLocalFolderTextView);
+        importFilesTexView = view.findViewById(R.id.importTextView);
         fabInternal = view.findViewById(R.id.fabInternal);
 
         isAllVisible = false;
@@ -82,6 +96,17 @@ public class InternalStorage extends Fragment {
         recyclerItems = new ArrayList<>();
 
         folderStack = new Stack<>();
+        // Register the file picker launcher
+        filePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        if (result.getData() != null) {
+                            handleSelectedFiles(result.getData());
+                        }
+                    }
+                }
+        );
 
         // Initialize adapter
         adapter = new InternalStorageAdapter(recyclerItems,
@@ -105,7 +130,17 @@ public class InternalStorage extends Fragment {
                         // Handle delete
                         deleteInternalFile(item.getFileName());
                     }
+
                 });
+        //@Override
+//                    public void onMoveToClick(RecyclerItem item) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onCopyToClick(RecyclerItem item) {
+//                        copyTo(item);
+//                    }
         recyclerView.setAdapter(adapter);
 
         // Initialize SwipeRefreshLayout
@@ -127,19 +162,102 @@ public class InternalStorage extends Fragment {
             if (!isAllVisible){
                 newLocalFolder.show();
                 newLocalFolderTextView.setVisibility(View.VISIBLE);
+                importFiles.show();
+                importFilesTexView.setVisibility(View.VISIBLE);
                 isAllVisible = true;
                 // Trigger folder creation
                 newLocalFolder.setOnClickListener(v1 -> {
                     createFolderDialog();  // Open dialog to create a folder
                 });
+                importFiles.setOnClickListener(v1 -> {
+                    importFileOrFolder();
+                });
             }else{
                 newLocalFolder.hide();
+                importFiles.hide();
+                importFilesTexView.setVisibility(View.GONE);
                 newLocalFolderTextView.setVisibility(View.GONE);
                 isAllVisible = false;
             }
         });
 
         return view;
+    }
+
+    private void copyTo(RecyclerItem item) {
+        Intent intent = new Intent(requireContext(), ChooseDestinationActivity.class);
+        intent.putExtra("itemName", item.getFileName());
+        startActivity(intent);
+    }
+
+
+
+    // Method to open file picker for file or folder import
+    private void importFileOrFolder() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true); // Enable multiple file selection
+        filePickerLauncher.launch(intent);
+    }
+    // Method to handle the selected files or folders
+    private void handleSelectedFiles(Intent data) {
+        if (data != null) {
+            if (data.getClipData() != null) {
+                // Multiple files selected
+                ClipData clipData = data.getClipData();
+                for (int i = 0; i < clipData.getItemCount(); i++) {
+                    Uri fileUri = clipData.getItemAt(i).getUri();
+                    importSingleFile(fileUri);
+                }
+            } else if (data.getData() != null) {
+                // Single file selected
+                Uri fileUri = data.getData();
+                importSingleFile(fileUri);
+            }
+        }
+    }
+    // Method to handle a single file import
+    private void importSingleFile(Uri uri) {
+        try {
+            // Get file name and copy the file to internal storage
+            String fileName = getFileNameFromUri(uri);
+            File destinationFile = new File(currentDirectory, fileName);
+
+            // Copy the file to internal storage
+            copyUriToFile(uri, destinationFile);
+
+            // Refresh the file list
+            loadFilesFromDirectory(currentDirectory);
+            updateBreadcrumbs();
+
+            Toast.makeText(requireContext(), "File imported: " + fileName, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(requireContext(), "Failed to import file", Toast.LENGTH_SHORT).show();
+        }
+    }
+    // Helper method to get file name from Uri
+    private String getFileNameFromUri(Uri uri) {
+        Cursor cursor = requireContext().getContentResolver().query(uri, null, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+            String name = cursor.getString(nameIndex);
+            cursor.close();
+            return name;
+        }
+        return "unknown_file";
+    }
+    // Helper method to copy Uri data to a file
+    private void copyUriToFile(Uri uri, File destinationFile) throws IOException {
+        try (InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
+             OutputStream outputStream = new FileOutputStream(destinationFile)) {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer, 0, length);
+            }
+        }
     }
     // Create a dialog for folder name input and create the folder in the current directory
     private void createFolderDialog() {
@@ -273,6 +391,40 @@ public class InternalStorage extends Fragment {
         }
     }
     // Method to load files and directories from the specified directory
+//    private void loadFilesFromDirectory(File directory) {
+//        recyclerItems.clear();
+//
+//        if (directory.exists() && directory.isDirectory()) {
+//            File[] files = directory.listFiles();
+//            if (files != null && files.length > 0) {
+//                for (File file : files) {
+//                    emptyStateImageView.setVisibility(View.GONE);
+//                    emptyStateTextView.setVisibility(View.GONE);
+//                    recyclerView.setVisibility(View.VISIBLE);
+//                    boolean isDirectory = file.isDirectory();
+//                    recyclerItems.add(new RecyclerItem(file.getName(), formatFileSize(file.length()), "", isDirectory, file.getAbsolutePath()));
+//
+//                }
+//
+//                // Notify adapter of new data
+//                adapter.notifyDataSetChanged();
+//            } else {
+//                Log.e("InternalStorage", "No files found in the directory.");
+//                emptyStateImageView.setVisibility(View.VISIBLE);
+//                emptyStateTextView.setVisibility(View.VISIBLE);
+//                recyclerView.setVisibility(View.GONE);
+//                adapter.notifyDataSetChanged();
+//            }
+//        } else {
+//            emptyStateImageView.setVisibility(View.VISIBLE);
+//            emptyStateTextView.setVisibility(View.VISIBLE);
+//            recyclerView.setVisibility(View.GONE);
+//            Log.e("InternalStorage", "Directory does not exist.");
+//            Toast.makeText(requireContext(), "Directory does not exist.", Toast.LENGTH_SHORT).show();
+//        }
+//    }
+    // Method to format file size into a readable format
+
     private void loadFilesFromDirectory(File directory) {
         recyclerItems.clear();
 
@@ -283,9 +435,23 @@ public class InternalStorage extends Fragment {
                     emptyStateImageView.setVisibility(View.GONE);
                     emptyStateTextView.setVisibility(View.GONE);
                     recyclerView.setVisibility(View.VISIBLE);
-                    boolean isDirectory = file.isDirectory();
-                    recyclerItems.add(new RecyclerItem(file.getName(), formatFileSize(file.length()), "", isDirectory, file.getAbsolutePath()));
 
+                    // Check if it's a directory or file
+                    boolean isDirectory = file.isDirectory();
+
+                    // Get the last modified date of the file/folder
+                    long lastModified = file.lastModified();
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss"); // Format the date
+                    String formattedDate = dateFormat.format(new Date(lastModified));
+
+                    // Add the file to recyclerItems
+                    recyclerItems.add(new RecyclerItem(
+                            file.getName(),
+                            formatFileSize(file.length()),
+                            formattedDate,  // Add the formatted date here
+                            isDirectory,
+                            file.getAbsolutePath()
+                    ));
                 }
 
                 // Notify adapter of new data
@@ -305,7 +471,6 @@ public class InternalStorage extends Fragment {
             Toast.makeText(requireContext(), "Directory does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
-    // Method to format file size into a readable format
     private String formatFileSize(long size) {
         if (size <= 0) return "0 KB";
         String[] units = new String[]{"B", "KB", "MB", "GB"};
