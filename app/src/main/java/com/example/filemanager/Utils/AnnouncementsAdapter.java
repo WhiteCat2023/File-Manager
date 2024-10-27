@@ -30,6 +30,9 @@ public class AnnouncementsAdapter extends RecyclerView.Adapter<AnnouncementsAdap
         AnnouncementsItem item = announcements.get(position);
         holder.announcements_title.setText(item.getTitle());
         holder.announcements_description.setText(item.getDescription());
+        holder.announcements_date.setText(item.getDate());
+        holder.announcements_author.setText(item.getCreatedBy());
+        holder.announcements_time.setText(item.getTime());
     }
 
     @Override
@@ -40,11 +43,17 @@ public class AnnouncementsAdapter extends RecyclerView.Adapter<AnnouncementsAdap
     public class AnnouncementViewHolder extends RecyclerView.ViewHolder {
         public TextView announcements_title;
         public TextView announcements_description;
+        public TextView announcements_date;
+        public TextView announcements_author;
+        public TextView announcements_time;
 
         public AnnouncementViewHolder(View itemView) {
             super(itemView);
             announcements_title = itemView.findViewById(R.id.announcements_title);
             announcements_description = itemView.findViewById(R.id.announcements_description);
+            announcements_date = itemView.findViewById(R.id.announcements_date);
+            announcements_author = itemView.findViewById(R.id.announcements_author);
+            announcements_time = itemView.findViewById(R.id.announcements_time);
         }
     }
 }

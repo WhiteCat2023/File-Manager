@@ -174,7 +174,22 @@ public class ServerStorage extends Fragment {
                                 .setTitle("Delete Confirmation")
                                 .setMessage("Are you sure you want to delete this file?" + item.getFileName())
                                 .setPositiveButton("Yes", (dialog, which) -> {
-                                    fileDeletionRequest(item.getFileName());
+                                    View views = LayoutInflater.from(requireContext()).inflate(R.layout.alertdialog_input_reason, null);
+                                    TextInputEditText reasonInput = views.findViewById(R.id.reasonInput);
+                                    new AlertDialog.Builder(requireContext())
+                                            .setTitle("Reason")
+                                            .setView(views)
+                                            .setPositiveButton("Create", (dialogs, whichs) -> {
+                                                String reason = reasonInput.getText().toString().trim();
+                                                if (!reason.isEmpty()) {
+                                                    fileDeletionRequest(item.getFileName(), reason);
+                                                }else{
+                                                    Toast.makeText(requireContext(), "Please enter a reason", Toast.LENGTH_SHORT).show();
+                                                }
+                                            })
+                                            .setNegativeButton("Cancel", (dialogs, whichs) -> dialogs.dismiss())
+                                            .show();
+
                                 }).setNegativeButton("No", null)
                                 .show();
                     }
@@ -862,7 +877,7 @@ public class ServerStorage extends Fragment {
             Toast.makeText(requireContext(), "Download Manager not available", Toast.LENGTH_SHORT).show();
         }
     }
-    private void fileDeletionRequest(String fileName) {
+    private void fileDeletionRequest(String fileName, String reason) {
         RequestQueue queue = Volley.newRequestQueue(requireContext());
 
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
@@ -877,6 +892,7 @@ public class ServerStorage extends Fragment {
             itemParams.put("action", "request_permission");
             itemParams.put("current_path", path);
             itemParams.put("user_email", userEmail);
+            itemParams.put("reason", reason);
         } catch (JSONException e) {
             Log.e("ServerStorage", "Error creating JSON object for deletion request: " + e.getMessage());
             Toast.makeText(requireContext(), "Error preparing deletion request", Toast.LENGTH_SHORT).show();

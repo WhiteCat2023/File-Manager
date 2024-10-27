@@ -94,7 +94,10 @@ public class Announcements extends Fragment {
                             AnnouncementsItem item = new AnnouncementsItem(
                                     announcementObject.getInt("ann_id"),
                                     announcementObject.getString("ann_title"),
-                                    announcementObject.getString("ann_content")
+                                    announcementObject.getString("ann_content"),
+                                    announcementObject.getString("created_by"),
+                                    announcementObject.getString("ann_created_at"),
+                                    announcementObject.getString("ann_created_at_time")
                             );
                             newAnnouncementsList.add(item);
                         }
