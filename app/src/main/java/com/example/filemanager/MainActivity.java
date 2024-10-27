@@ -26,14 +26,16 @@ import com.example.filemanager.Tabs.InternalStorage;
 import com.example.filemanager.Tabs.ServerStorage;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
+import com.ismaeldivita.chipnavigation.ChipNavigationBar;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     // Initializing variables
-    DrawerLayout drawerLayout;
-    Toolbar toolbar;
-    ProgressDialog progressDialog;
-    FragmentManager fragmentManager;
+    private DrawerLayout drawerLayout;
+    private Toolbar toolbar;
+    private ProgressDialog progressDialog;
+    private FragmentManager fragmentManager;
+    private ChipNavigationBar chipNavigationBar;
 
     private static final String SHARED_PREF_NAME = "session";
     private static final String SESSION_EMAIL = "user_email";
@@ -52,6 +54,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setSupportActionBar(toolbar);
 
         drawerLayout = findViewById(R.id.drawer_layout);
+        chipNavigationBar = findViewById(R.id.chipNaviagation);
+
+        chipNavigationBar.setItemSelected(R.id.nav_announcements, true);
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
+
+        //Chip Navigation
+        chipNavigationBar.setOnItemSelectedListener(new ChipNavigationBar.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(int itemId) {
+                if (itemId == R.id.nav_announcements) {
+                    getSupportActionBar().setTitle("Announcements");
+                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
+                } else if (itemId == R.id.nav_files) {
+                    getSupportActionBar().setTitle("Files");
+                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Files()).commit();
+                } else if (itemId == R.id.nav_todolist) {
+                    getSupportActionBar().setTitle("To Do");
+                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ToDoList()).commit();
+                } else if (itemId == R.id.nav_trash) {
+                    getSupportActionBar().setTitle("Trash");
+                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Trash()).commit();
+                }
+            }
+        });
 
         // Adds the hamburger icon
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open_nav, R.string.close_nav);
@@ -77,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         if (savedInstanceState == null) {
             openFragment(new Announcements());
+            getSupportActionBar().setTitle("Announcements");
             navigationView.setCheckedItem(R.id.nav_announcements);
         } else {
             String userEmail = savedInstanceState.getString(SESSION_EMAIL);
@@ -117,15 +144,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-        if (itemId == R.id.nav_announcements) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
-        } else if (itemId == R.id.nav_files) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Files()).commit();
-        } else if (itemId == R.id.nav_todolist) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ToDoList()).commit();
-        } else if (itemId == R.id.nav_trash) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Trash()).commit();
-        } else if (itemId == R.id.nav_feedback) {
+//        if (itemId == R.id.nav_announcements) {
+//            getSupportActionBar().setTitle("Announcements");
+//            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
+//        } else if (itemId == R.id.nav_files) {
+//            getSupportActionBar().setTitle("Files");
+//            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Files()).commit();
+//        } else if (itemId == R.id.nav_todolist) {
+//            getSupportActionBar().setTitle("To Do");
+//            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ToDoList()).commit();
+//        } else if (itemId == R.id.nav_trash) {
+//            getSupportActionBar().setTitle("Trash");
+//            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Trash()).commit();
+//        }
+        if (itemId == R.id.nav_feedback) {
             Intent intent = new Intent(this, Feedback.class);
             startActivity(intent);
         } else if (itemId == R.id.nav_signout) {

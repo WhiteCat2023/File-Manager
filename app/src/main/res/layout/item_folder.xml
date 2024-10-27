@@ -9,7 +9,7 @@
         android:id="@+id/folderIcon"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:src="@drawable/ic_folder" />
+        android:src="@drawable/c_folder" />
 
     <TextView
         android:id="@+id/folderNameTextView"

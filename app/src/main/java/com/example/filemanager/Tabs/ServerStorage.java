@@ -99,7 +99,7 @@ public class ServerStorage extends Fragment {
     private Stack<String> folderStack;
 
     private static final String SHARED_PREF_NAME = "session";
-    private static final String SESSION_EMAIL = "user_email";
+    private static final String SESSION_TOKEN = "user_token";
     private static final String SERVER_STORAGE_CURRENT_PATH = "server_storage_current_path";
 
     private static final int PICK_FILE_REQUEST = 0;
@@ -174,7 +174,22 @@ public class ServerStorage extends Fragment {
                                 .setTitle("Delete Confirmation")
                                 .setMessage("Are you sure you want to delete this file?" + item.getFileName())
                                 .setPositiveButton("Yes", (dialog, which) -> {
-                                    fileDeletionRequest(item.getFileName());
+                                    View views = LayoutInflater.from(requireContext()).inflate(R.layout.alertdialog_input_reason, null);
+                                    TextInputEditText reasonInput = views.findViewById(R.id.reasonInput);
+                                    new AlertDialog.Builder(requireContext())
+                                            .setTitle("Reason")
+                                            .setView(views)
+                                            .setPositiveButton("Create", (dialogs, whichs) -> {
+                                                String reason = reasonInput.getText().toString().trim();
+                                                if (!reason.isEmpty()) {
+                                                    fileDeletionRequest(item.getFileName(), reason);
+                                                }else{
+                                                    Toast.makeText(requireContext(), "Please enter a reason", Toast.LENGTH_SHORT).show();
+                                                }
+                                            })
+                                            .setNegativeButton("Cancel", (dialogs, whichs) -> dialogs.dismiss())
+                                            .show();
+
                                 }).setNegativeButton("No", null)
                                 .show();
                     }
@@ -862,11 +877,11 @@ public class ServerStorage extends Fragment {
             Toast.makeText(requireContext(), "Download Manager not available", Toast.LENGTH_SHORT).show();
         }
     }
-    private void fileDeletionRequest(String fileName) {
+    private void fileDeletionRequest(String fileName, String reason) {
         RequestQueue queue = Volley.newRequestQueue(requireContext());
 
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
-        String userEmail = sharedPreferences.getString(SESSION_EMAIL, "0");
+        String userToken = sharedPreferences.getString(SESSION_TOKEN, "0");
 
         String path = MY_FOLDER_PATH + currentPath + "/" + fileName;
         JSONObject itemParams = new JSONObject();
@@ -876,7 +891,8 @@ public class ServerStorage extends Fragment {
             itemParams.put("file_name", fileName);
             itemParams.put("action", "request_permission");
             itemParams.put("current_path", path);
-            itemParams.put("user_email", userEmail);
+            itemParams.put("user_id", userToken);
+            itemParams.put("reason", reason);
         } catch (JSONException e) {
             Log.e("ServerStorage", "Error creating JSON object for deletion request: " + e.getMessage());
             Toast.makeText(requireContext(), "Error preparing deletion request", Toast.LENGTH_SHORT).show();
@@ -885,29 +901,38 @@ public class ServerStorage extends Fragment {
 
         Log.d("ServerStorage", "Sending deletion request with parameters: " + itemParams.toString());
 
-        JsonObjectRequest request = new JsonObjectRequest(
-                Request.Method.POST,
-                FILE_DELETE_URL,
-                itemParams,
+        StringRequest request = new StringRequest(Request.Method.POST, FILE_DELETE_URL,
                 response -> {
-                    if (response != null) {
-                        try {
-                            Toast.makeText(requireContext(), "File deletion request sent", Toast.LENGTH_SHORT).show();
-                        } catch (Exception e) {
-                            Log.e("ServerStorage", "Error parsing response: " + e.getMessage());
-                            Toast.makeText(requireContext(), "Error processing response", Toast.LENGTH_SHORT).show();
+                    try{
+                        JSONObject jsonResponse = new JSONObject(response);
+                        String status = jsonResponse.getString("status");
+                        String message = jsonResponse.getString("message");
+                        if (status.equals("success")) {
+                            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+                        }else{
+                            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
                         }
-                    } else {
-                        Toast.makeText(requireContext(), "No response from server", Toast.LENGTH_SHORT).show();
-                    }
-                },
-                error -> {
-                    Log.e("ServerStorage", "Error sending deletion request: " + error.getMessage());
-                    Toast.makeText(requireContext(), "Error Sending Deletion Request", Toast.LENGTH_SHORT).show();
-                }
-        );
+                    }catch (JSONException e){
 
-        queue.add(request);
+                    }
+                }, error -> {
+                    if (error.networkResponse != null) {
+                        Log.e("Deletion Request", "Status Code: " + error.networkResponse.statusCode);
+                        Log.e("Deletion Request", "Response Data: " + new String(error.networkResponse.data));
+                    }
+                    errorShortMessage("Error: ", error.getMessage());
+                }){
+                    @Override
+                    public byte[] getBody() {
+                        return itemParams.toString().getBytes();
+                    }
+
+                    @Override
+                    public String getBodyContentType() {
+                        return "application/json";
+                    }
+                };
+                queue.add(request);
     }
     private void saveCurrentPath(String path) {
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
@@ -938,4 +963,8 @@ public class ServerStorage extends Fragment {
         int idx = (int) (Math.log(size) / Math.log(1024));
         return String.format("%.1f %s", size / Math.pow(1024, idx), units[idx]);
     }
+    private void errorShortMessage(String type, String message) {
+        Toast.makeText(requireContext(), type + message, Toast.LENGTH_SHORT).show();
+    }
+
 }

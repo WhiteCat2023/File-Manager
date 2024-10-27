@@ -441,7 +441,7 @@ public class InternalStorage extends Fragment {
 
                     // Get the last modified date of the file/folder
                     long lastModified = file.lastModified();
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss"); // Format the date
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm a"); // Format the date
                     String formattedDate = dateFormat.format(new Date(lastModified));
 
                     // Add the file to recyclerItems

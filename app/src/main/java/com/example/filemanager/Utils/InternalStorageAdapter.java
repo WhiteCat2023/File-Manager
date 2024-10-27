@@ -169,7 +169,7 @@ public class InternalStorageAdapter extends RecyclerView.Adapter<InternalStorage
                 break;
             case "jpg":
             case "jpeg":
-                holder.icon.setImageResource(R.drawable.jpg);
+                holder.icon.setImageResource(R.drawable.c_jpg);
                 break;
             case "png":
                 holder.icon.setImageResource(R.drawable.c_png);

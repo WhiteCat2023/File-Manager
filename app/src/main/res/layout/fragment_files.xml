@@ -6,23 +6,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Fragments.Files">
 
-    <TextView
-        android:id="@+id/fileTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Files"
-        android:gravity="start"
-        android:paddingTop="30dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="0dp"
-        android:textSize="40sp"
-        android:layout_marginTop="56dp"/>
-
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/innerNav"
-        android:layout_below="@+id/fileTitle"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="56dp">
 
         <com.google.android.material.tabs.TabItem
 

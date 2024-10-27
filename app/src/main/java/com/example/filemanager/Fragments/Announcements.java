@@ -24,6 +24,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,6 +84,8 @@ public class Announcements extends Fragment {
     private void fetchAnnouncements() {
         String url = "https://skcalamba.scarlet2.io/ann_retrieve.php?endpoint=announcements";
 
+
+
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
                 response -> {
                     try {
@@ -94,7 +97,9 @@ public class Announcements extends Fragment {
                             AnnouncementsItem item = new AnnouncementsItem(
                                     announcementObject.getInt("ann_id"),
                                     announcementObject.getString("ann_title"),
-                                    announcementObject.getString("ann_content")
+                                    announcementObject.getString("ann_content"),
+                                    announcementObject.getString("created_by"),
+                                    announcementObject.getString("ann_created_at")
                             );
                             newAnnouncementsList.add(item);
                         }
@@ -112,12 +117,12 @@ public class Announcements extends Fragment {
                         refreshLayout.setRefreshing(false);
                     }
                 }, error -> {
-            error.printStackTrace();
-            refreshLayout.setRefreshing(true);
-            Log.e("Volley", "Error: " + error.getMessage());
-            Toast.makeText(requireContext(), "Failed to fetch data", Toast.LENGTH_SHORT).show();
-            refreshLayout.setRefreshing(false);
-        });
+                    error.printStackTrace();
+                    refreshLayout.setRefreshing(true);
+                    Log.e("Volley", "Error: " + error.getMessage());
+                    Toast.makeText(requireContext(), "Failed to fetch data", Toast.LENGTH_SHORT).show();
+                    refreshLayout.setRefreshing(false);
+                });
 
         queue.add(jsonArrayRequest);
     }
