@@ -1,8 +1,7 @@
-package com.example.filemanager;
+package com.example.filemanager.Todo_Tabs;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.example.filemanager.R;
 import com.example.filemanager.Utils.ToDoListAdapter;
 import com.example.filemanager.Utils.ToDoListItem;
 import com.example.filemanager.Utils.TodoDatabaseHelper;

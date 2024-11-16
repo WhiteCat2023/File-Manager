@@ -4,17 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".Trash">
-    <TextView
-        android:id="@+id/trashTextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="30dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="0dp"
-        android:textSize="40sp"
-        android:layout_marginTop="56dp"
-        android:text="Trash"/>
+    android:layout_marginBottom="56dp">
     <ImageView
         android:id="@+id/trashImageView"
         android:layout_width="match_parent"
@@ -36,8 +26,7 @@
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/trashSwipeRefreshLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/trashTextView">
+        android:layout_height="match_parent">
         <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

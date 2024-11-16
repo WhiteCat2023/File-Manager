@@ -22,11 +22,14 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.filemanager.ChooseDestinationActivity;
+import com.example.filemanager.Fragments.Announcements;
+import com.example.filemanager.MainActivity;
 import com.example.filemanager.R;
 import com.example.filemanager.Utils.InternalStorageAdapter;
 import com.example.filemanager.Utils.RecyclerItem;
@@ -642,11 +645,12 @@ public class InternalStorage extends Fragment {
     }
     public void goBack() {
         if (!folderStack.isEmpty()) {
-           String previousPath = folderStack.pop();
-           currentDirectory = new File(previousPath);
-           loadFilesFromDirectory(currentDirectory);
-           updateBreadcrumbs();
-        } else {
+            String previousPath = folderStack.pop();
+            currentDirectory = new File(previousPath);
+            loadFilesFromDirectory(currentDirectory);
+            updateBreadcrumbs();
+        }else{
+            requireActivity().getOnBackPressedDispatcher().onBackPressed();
             AlertDialog alertDialog = new AlertDialog.Builder(requireContext())
                     .setTitle("Error")
                     .setMessage("No previous folders to go back to.")
@@ -655,8 +659,45 @@ public class InternalStorage extends Fragment {
             alertDialog.show();
             // Handle the case when there are no previous folders (e.g., show a message)
             Log.e("InternalStorage", "No previous folders to go back to.");
+            FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
+            fragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, new Announcements()) // Replace with your fragment container ID
+                    .addToBackStack(null) // Optional: Add to back stack if needed
+                    .commit();
         }
     }
+//    public void goBack() {
+//        if (!folderStack.isEmpty()) {
+//           String previousPath = folderStack.pop();
+//           currentDirectory = new File(previousPath);
+//           loadFilesFromDirectory(currentDirectory);
+//           updateBreadcrumbs();
+//            requireActivity().getOnBackPressedDispatcher().addCallback(this.requireActivity(),
+//                    new OnBackPressedCallback(true) {
+//                        @Override
+//                        public void handleOnBackPressed() {
+//                           goBack();
+//                        }
+//                    });
+//        } else {
+////            AlertDialog alertDialog = new AlertDialog.Builder(requireContext())
+////                    .setTitle("Error")
+////                    .setMessage("No previous folders to go back to.")
+////                    .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+////                    .create();
+////            alertDialog.show();
+////            // Handle the case when there are no previous folders (e.g., show a message)
+////            Log.e("InternalStorage", "No previous folders to go back to.");
+//            FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
+//            fragmentManager.beginTransaction()
+//                    .replace(R.id.fragment_container, new Announcements()) // Replace with your fragment container ID
+//                    .addToBackStack(null) // Optional: Add to back stack if needed
+//                    .commit();
+//
+//        }
+//
+//
+//    }
     @Override
     public void onResume() {
         super.onResume();
@@ -673,5 +714,6 @@ public class InternalStorage extends Fragment {
             }
         });
     }
+
 
 }

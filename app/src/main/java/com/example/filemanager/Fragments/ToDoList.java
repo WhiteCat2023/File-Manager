@@ -1,36 +1,43 @@
 package com.example.filemanager.Fragments;
 
 import android.os.Bundle;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.viewpager2.widget.ViewPager2;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import androidx.activity.OnBackPressedCallback;
-import androidx.fragment.app.Fragment;
-import androidx.viewpager2.widget.ViewPager2;
+import android.widget.TextView;
 
 import com.example.filemanager.R;
+import com.example.filemanager.Todo_Tabs.MyTask;
+import com.example.filemanager.Todo_Tabs.SharedTask;
+import com.example.filemanager.Utils.TodoViewPagerAdapter;
 import com.example.filemanager.Utils.ViewPagerAdapter;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.Objects;
 
-public class Files extends Fragment {
+
+public class ToDoList extends Fragment {
 
     TabLayout tabLayout;
     ViewPager2 viewPager2;
-    ViewPagerAdapter viewPagerAdapter;
+    TodoViewPagerAdapter viewPagerAdapter;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_files, container, false);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
 
+        View view = inflater.inflate(R.layout.fragment_to_do_list, container, false);
 
-        tabLayout = view.findViewById(R.id.innerNav);
-        viewPager2 = view.findViewById(R.id.viewPager);
+        tabLayout = view.findViewById(R.id.innerTodoNav);
+        viewPager2 = view.findViewById(R.id.viewTodoPager);
 
         //Sets the adapter
-        viewPagerAdapter = new ViewPagerAdapter(this);
+        viewPagerAdapter = new TodoViewPagerAdapter(this);
 
         //Sets the adapter
         viewPager2.setAdapter(viewPagerAdapter);

@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -45,7 +46,6 @@ public class Trash extends Fragment {
 
     private static final String TRASH_FOLDER_NAME = "Trash";
     private static final String METADATA_FOLDER_NAME = "Metadata";
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_trash, container, false);
@@ -91,6 +91,8 @@ public class Trash extends Fragment {
         // Load deleted items from the Trash folder
         loadDeletedItems();
 
+//        setupOnBackPressed();
+
         swipeRefreshLayout.setOnRefreshListener(() -> {
             loadDeletedItems();
             swipeRefreshLayout.setRefreshing(false);
@@ -98,7 +100,6 @@ public class Trash extends Fragment {
 
         return view;
     }
-
     private void restoreFolder(RecyclerItem item) {
         // Define paths
         File trashFolder = new File(requireContext().getExternalFilesDir(null), TRASH_FOLDER_NAME);
@@ -154,7 +155,6 @@ public class Trash extends Fragment {
             Toast.makeText(requireContext(), "Failed to restore folder", Toast.LENGTH_SHORT).show();
         }
     }
-
     private void deleteFolder(RecyclerItem item) {
         // Define paths
         File trashFolder = new File(requireContext().getExternalFilesDir(null), TRASH_FOLDER_NAME);
@@ -191,7 +191,6 @@ public class Trash extends Fragment {
             Toast.makeText(requireContext(), "Folder does not exist", Toast.LENGTH_SHORT).show();
         }
     }
-
     // Recursive folder deletion method
     private void deleteFolderRecursively(File folder) {
         File[] files = folder.listFiles();
@@ -205,9 +204,6 @@ public class Trash extends Fragment {
         }
         folder.delete(); // Finally, delete the folder itself
     }
-
-
-
     // Method to create Trash folder if it doesn't exist
     private void createTrashFolderIfNeeded() {
         File trashFolder = new File(requireContext().getExternalFilesDir(null), TRASH_FOLDER_NAME);
@@ -225,7 +221,6 @@ public class Trash extends Fragment {
             Log.d("Trash", "Trash folder already exists.");
         }
     }
-
     // Method to load deleted items from the Trash folder
     private void loadDeletedItems() {
         File trashFolder = new File(requireContext().getExternalFilesDir(null), TRASH_FOLDER_NAME);
@@ -252,7 +247,6 @@ public class Trash extends Fragment {
             Toast.makeText(requireContext(), "Trash folder does not exist.", Toast.LENGTH_SHORT).show();
         }
     }
-
     private void updateEmptyStateVisibility() {
         if (deletedItems.isEmpty()) {
             emptyStateImageView.setVisibility(View.VISIBLE);
@@ -264,7 +258,6 @@ public class Trash extends Fragment {
             recyclerView.setVisibility(View.VISIBLE);
         }
     }
-
     // Method to format file size into a readable format
     private String formatFileSize(long size) {
         if (size <= 0) return "0 KB";
@@ -272,7 +265,6 @@ public class Trash extends Fragment {
         int idx = (int) (Math.log(size) / Math.log(1024));
         return String.format("%.1f %s", size / Math.pow(1024, idx), units[idx]);
     }
-
     // Method to restore deleted files
     private void restoreDeletedFiles(RecyclerItem item) {
         File trashFolder = new File(requireContext().getExternalFilesDir(null), TRASH_FOLDER_NAME);
@@ -335,9 +327,6 @@ public class Trash extends Fragment {
             Toast.makeText(requireContext(), "Error occurred while restoring file: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
-
-
-
     // Method to delete files from Trash permanently
     private void deleteDeletedFile(RecyclerItem item) {
         File trashFolder = new File(requireContext().getExternalFilesDir(null), TRASH_FOLDER_NAME);
@@ -361,4 +350,16 @@ public class Trash extends Fragment {
             Toast.makeText(requireContext(), "Failed to delete " + item.getFileName(), Toast.LENGTH_SHORT).show();
         }
     }
+
+//    private void setupOnBackPressed(){
+//        requireActivity().getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {
+//            @Override
+//            public void handleOnBackPressed() {
+//                if (isEnabled()){
+//                    setEnabled(false);
+//                    requireActivity().onBackPressed();
+//                }
+//            }
+//        });
+//    }
 }

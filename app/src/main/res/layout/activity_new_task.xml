@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".NewTask"
+    tools:context=".Todo_Tabs.NewTask"
     android:padding="20dp">
     <ImageView
         android:id="@+id/todoBack"

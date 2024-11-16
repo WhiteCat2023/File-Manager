@@ -5,37 +5,28 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 
 import com.example.filemanager.Fragments.Announcements;
 import com.example.filemanager.Fragments.Files;
 import com.example.filemanager.Tabs.InternalStorage;
 import com.example.filemanager.Tabs.ServerStorage;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.navigation.NavigationView;
+import com.example.filemanager.Fragments.ToDoList;
+import com.google.android.material.imageview.ShapeableImageView;
 import com.ismaeldivita.chipnavigation.ChipNavigationBar;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity {
 
     // Initializing variables
-    private DrawerLayout drawerLayout;
-    private Toolbar toolbar;
     private ProgressDialog progressDialog;
-    private FragmentManager fragmentManager;
     private ChipNavigationBar chipNavigationBar;
+    private ShapeableImageView profile;
+
+    private TextView title;
 
     private static final String SHARED_PREF_NAME = "session";
     private static final String SESSION_EMAIL = "user_email";
@@ -43,89 +34,55 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String SESSION_NAME = "user_name";
 
 
-    TextView headerName, headerEmail, headerPosition;
+//    TextView headerName, headerEmail, headerPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        drawerLayout = findViewById(R.id.drawer_layout);
         chipNavigationBar = findViewById(R.id.chipNaviagation);
-
-        chipNavigationBar.setItemSelected(R.id.nav_announcements, true);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
+        title = findViewById(R.id.title);
+        profile = findViewById(R.id.shapeableImageView);
 
         //Chip Navigation
         chipNavigationBar.setOnItemSelectedListener(new ChipNavigationBar.OnItemSelectedListener() {
             @Override
             public void onItemSelected(int itemId) {
                 if (itemId == R.id.nav_announcements) {
-                    getSupportActionBar().setTitle("Announcements");
+                    title.setText("SK Calamba");
                     getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
                 } else if (itemId == R.id.nav_files) {
-                    getSupportActionBar().setTitle("Files");
+                    title.setText("Files");
                     getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Files()).commit();
                 } else if (itemId == R.id.nav_todolist) {
-                    getSupportActionBar().setTitle("To Do");
+                    title.setText("To Do");
                     getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ToDoList()).commit();
                 } else if (itemId == R.id.nav_trash) {
-                    getSupportActionBar().setTitle("Trash");
+                    title.setText("Trash");
                     getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Trash()).commit();
                 }
             }
         });
 
-        // Adds the hamburger icon
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open_nav, R.string.close_nav);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
+        profile.setOnClickListener(view -> {
+            Intent intent = new Intent(this, Profile.class);
+            startActivity(intent);
+            finish();
+        });
 
-        // Adds the navigation drawer
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
 
-        fragmentManager = getSupportFragmentManager();
-
+        //Progressbar
         progressDialog = new ProgressDialog(MainActivity.this);
         progressDialog.setCancelable(false);
 
-
-        View headerView = navigationView.getHeaderView(0);
-        headerName = headerView.findViewById(R.id.headerName);
-        headerEmail = headerView.findViewById(R.id.headerEmail);
-        headerPosition = headerView.findViewById(R.id.headerPosition);
-
-        loadUserData();
-
         if (savedInstanceState == null) {
-            openFragment(new Announcements());
-            getSupportActionBar().setTitle("Announcements");
-            navigationView.setCheckedItem(R.id.nav_announcements);
-        } else {
-            String userEmail = savedInstanceState.getString(SESSION_EMAIL);
-            String userName = savedInstanceState.getString(SESSION_NAME);
-            String userPosition = savedInstanceState.getString(SESSION_POSITION);
 
-            headerEmail.setText(userEmail);
-            headerName.setText(userName);
-            headerPosition.setText(userPosition);
+            chipNavigationBar.setItemSelected(R.id.nav_announcements, true);
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
         }
     }
 
-    private void loadUserData() {
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
-        String userEmail = sharedPreferences.getString(SESSION_EMAIL, "Email not found");
-        String userName = sharedPreferences.getString(SESSION_NAME, "Name not found");
-        String userPosition = sharedPreferences.getString(SESSION_POSITION, "Position not found");
-
-        headerName.setText(userName);
-        headerEmail.setText(userEmail);
-        headerPosition.setText(userPosition);
-    }
     @Override
     public void onTrimMemory(int level) {
         super.onTrimMemory(level);
@@ -140,37 +97,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         editor.clear();
         editor.apply();
     }
-    // Handles the navigation drawer
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        int itemId = item.getItemId();
-//        if (itemId == R.id.nav_announcements) {
-//            getSupportActionBar().setTitle("Announcements");
-//            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
-//        } else if (itemId == R.id.nav_files) {
-//            getSupportActionBar().setTitle("Files");
-//            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Files()).commit();
-//        } else if (itemId == R.id.nav_todolist) {
-//            getSupportActionBar().setTitle("To Do");
-//            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ToDoList()).commit();
-//        } else if (itemId == R.id.nav_trash) {
-//            getSupportActionBar().setTitle("Trash");
-//            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Trash()).commit();
-//        }
-        if (itemId == R.id.nav_feedback) {
-            Intent intent = new Intent(this, Feedback.class);
-            startActivity(intent);
-        } else if (itemId == R.id.nav_signout) {
-            progressDialog.setMessage("Signing Out...");
-            progressDialog.show();
-            messageShort("Signing Out...");
-            logout();
-        }
-
-        drawerLayout.closeDrawer(GravityCompat.START);
-
-        return true;
-    }
     // Handles the back button
     @Override
     public void onBackPressed() {
@@ -182,53 +108,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (currentFragment instanceof ServerStorage) {
             ServerStorage serverStorageFragment = (ServerStorage) currentFragment;
             serverStorageFragment.goBack();
-        } else {
+        } else{
             // Dismiss the progress dialog if it's showing
             if (progressDialog != null && progressDialog.isShowing()) {
                 progressDialog.dismiss();
             }
-
-            super.onBackPressed();
-        }
-
-        // Check if the navigation drawer is open
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
-        }
-        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-            getSupportFragmentManager().popBackStack();
-        } else {
             super.onBackPressed();
         }
     }
-    // Removes the session and logs the user out
-    private void logout() {
-        // Clear session data
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.clear();
-        editor.apply();
-
-        // Dismiss the progress dialog if it's showing
-        if (progressDialog != null && progressDialog.isShowing()) {
-            progressDialog.dismiss();
-        }
-
-        // Redirect to login activity
-        Intent intent = new Intent(MainActivity.this, Login.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clear backstack
-        startActivity(intent);
-        finish();
-    }
-    // Opens a fragment
-    private void openFragment(Fragment fragment) {
-        if (fragment != null) {
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
-            transaction.replace(R.id.fragment_container, fragment);
-            transaction.addToBackStack(null);
-            transaction.commit();
-        }
-    }
+//    // Removes the session and logs the user out
+//    private void logout() {
+//        // Clear session data
+//        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+//        SharedPreferences.Editor editor = sharedPreferences.edit();
+//        editor.clear();
+//        editor.apply();
+//
+//        // Dismiss the progress dialog if it's showing
+//        if (progressDialog != null && progressDialog.isShowing()) {
+//            progressDialog.dismiss();
+//        }
+//
+//        // Redirect to login activity
+//        Intent intent = new Intent(MainActivity.this, Login.class);
+//        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clear backstack
+//        startActivity(intent);
+//        finish();
+//    }
     // Returns a short toast
     public void messageShort(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
@@ -248,12 +154,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(SESSION_EMAIL, headerEmail.getText().toString());
-        outState.putString(SESSION_NAME, headerName.getText().toString());
-        outState.putString(SESSION_POSITION, headerPosition.getText().toString());
+//        outState.putString(SESSION_EMAIL, headerEmail.getText().toString());
+//        outState.putString(SESSION_NAME, headerName.getText().toString());
+//        outState.putString(SESSION_POSITION, headerPosition.getText().toString());
+        if (title != null){
+            String text = title.getText().toString().trim();
+            outState.putString("title", text);
+        }
 
     }
-
-
-
 }

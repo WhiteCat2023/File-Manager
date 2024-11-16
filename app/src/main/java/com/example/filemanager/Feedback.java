@@ -47,7 +47,8 @@ public class Feedback extends AppCompatActivity {
 
         feedbackBack = findViewById(R.id.feedbackBack);
         feedbackBack.setOnClickListener(v -> {
-            Intent intent = new Intent(Feedback.this, MainActivity.class);
+            Intent intent = new Intent(Feedback.this, Profile.class);
+            startActivity(intent);
             finish();
         });
         feedbackTitle = findViewById(R.id.feedbackTitle);

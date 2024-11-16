@@ -20,11 +20,14 @@
         tools:ignore="DiscouragedApi"
         tools:targetApi="31">
         <activity
+            android:name=".Profile"
+            android:exported="false" />
+        <activity
             android:name=".ChooseDestinationActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".NewTask2"
+            android:name=".Todo_Tabs.NewTask2"
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity
@@ -36,7 +39,7 @@
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".NewTask"
+            android:name=".Todo_Tabs.NewTask"
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity

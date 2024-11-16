@@ -1,4 +1,4 @@
-package com.example.filemanager;
+package com.example.filemanager.Todo_Tabs;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
@@ -10,6 +10,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.filemanager.MainActivity;
+import com.example.filemanager.R;
 import com.example.filemanager.Utils.ToDoListItem;
 import com.example.filemanager.Utils.TodoDatabaseHelper;
 import com.google.android.material.textfield.TextInputEditText;

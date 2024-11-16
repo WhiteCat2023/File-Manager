@@ -11,8 +11,8 @@
             android:background="@drawable/items_border_light">
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/corner"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:scaleType="fitCenter"
                 app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
                 app:srcCompat="@drawable/profile"/>

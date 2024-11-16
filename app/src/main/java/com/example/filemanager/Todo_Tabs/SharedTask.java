@@ -1,4 +1,4 @@
-package com.example.filemanager.Fragments;
+package com.example.filemanager.Todo_Tabs;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -18,7 +18,6 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.filemanager.NewTask;
 import com.example.filemanager.R;
 import com.example.filemanager.Utils.ToDoListAdapter;
 import com.example.filemanager.Utils.ToDoListItem;
