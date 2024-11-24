@@ -39,6 +39,8 @@ public class Announcements extends Fragment {
     private Handler handler;
     private final int REFRESH_INTERVAL = 5000; // 10 seconds
 
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -99,7 +101,8 @@ public class Announcements extends Fragment {
                                     announcementObject.getString("ann_title"),
                                     announcementObject.getString("ann_content"),
                                     announcementObject.getString("created_by"),
-                                    announcementObject.getString("ann_created_at")
+                                    announcementObject.getString("ann_created_at"),
+                                    announcementObject.getString("profile_picture")
                             );
                             newAnnouncementsList.add(item);
                         }

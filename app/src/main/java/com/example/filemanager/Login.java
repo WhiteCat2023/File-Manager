@@ -32,6 +32,7 @@ public class Login extends AppCompatActivity {
     private static final String SESSION_TOKEN = "user_token";
     private static final String SESSION_POSITION = "user_position";
     private static final String SESSION_NAME = "user_name";
+    private static final String SESSION_PROFILE_PICTURE = "user_profile_picture";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,9 +84,10 @@ public class Login extends AppCompatActivity {
                         String userPosition = jsonResponse.optString("user_position", "");
                         String userName = jsonResponse.optString("user_name", "");
                         String userEmail = jsonResponse.optString("user_email", "");
+                        String userProfilePicture = jsonResponse.optString("user_profile_picture", "");
 
                         if (status.equals("success")) {
-                            saveInstanceState(userEmail, userToken, userPosition, userName);
+                            saveInstanceState(userEmail, userToken, userPosition, userName, userProfilePicture);
                             dismissProgressDialog();
                             Toast.makeText(this, "Login Successful", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(Login.this, MainActivity.class);
@@ -124,13 +126,14 @@ public class Login extends AppCompatActivity {
         requestQueue.add(stringRequest);
     }
 
-    private void saveInstanceState(String email, String token, String position, String name) {
+    private void saveInstanceState(String email, String token, String position, String name, String userProfilePicture) {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(SESSION_EMAIL, email);
         editor.putString(SESSION_TOKEN, token);
         editor.putString(SESSION_POSITION, position);
         editor.putString(SESSION_NAME, name);
+        editor.putString(SESSION_PROFILE_PICTURE, userProfilePicture);
         editor.apply();
     }
 

@@ -11,15 +11,17 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.filemanager.R;
+import com.google.android.material.imageview.ShapeableImageView;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import com.squareup.picasso.Picasso;
 
 public class AnnouncementsAdapter extends RecyclerView.Adapter<AnnouncementsAdapter.AnnouncementViewHolder> {
     private List<AnnouncementsItem> announcements;
-
+    private String profile_url = "https://skcalamba.scarlet2.io/profile/";
     public AnnouncementsAdapter(List<AnnouncementsItem> announcements) {
         this.announcements = announcements;
     }
@@ -37,6 +39,10 @@ public class AnnouncementsAdapter extends RecyclerView.Adapter<AnnouncementsAdap
         holder.announcements_description.setText(item.getDescription());
         holder.announcements_author.setText(item.getCreatedBy());
         holder.announcements_time.setText(time_ago(item.getDate()));
+        if(item.getProfile() != null){
+            Picasso.get().load(profile_url + item.getProfile()).into(holder.cornerImage);
+        }
+
     }
 
     @Override
@@ -49,6 +55,7 @@ public class AnnouncementsAdapter extends RecyclerView.Adapter<AnnouncementsAdap
         public TextView announcements_description;
         public TextView announcements_author;
         public TextView announcements_time;
+        public ShapeableImageView cornerImage;
 
         public AnnouncementViewHolder(View itemView) {
             super(itemView);
@@ -56,6 +63,7 @@ public class AnnouncementsAdapter extends RecyclerView.Adapter<AnnouncementsAdap
             announcements_description = itemView.findViewById(R.id.announcements_description);
             announcements_author = itemView.findViewById(R.id.announcements_author);
             announcements_time = itemView.findViewById(R.id.announcements_time);
+            cornerImage = itemView.findViewById(R.id.cornerImage);
         }
     }
     private String time_ago(String date){

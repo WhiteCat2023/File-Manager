@@ -18,6 +18,7 @@ import com.example.filemanager.Tabs.ServerStorage;
 import com.example.filemanager.Fragments.ToDoList;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.ismaeldivita.chipnavigation.ChipNavigationBar;
+import com.squareup.picasso.Picasso;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,6 +33,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String SESSION_EMAIL = "user_email";
     private static final String SESSION_POSITION = "user_position";
     private static final String SESSION_NAME = "user_name";
+    private static final String SESSION_PROFILE_PICTURE = "user_profile_picture";
+
+    private String profile_url = "https://skcalamba.scarlet2.io/profile/";
 
 
 //    TextView headerName, headerEmail, headerPosition;
@@ -44,6 +48,10 @@ public class MainActivity extends AppCompatActivity {
         chipNavigationBar = findViewById(R.id.chipNaviagation);
         title = findViewById(R.id.title);
         profile = findViewById(R.id.shapeableImageView);
+
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        String profilePicture = sharedPreferences.getString(SESSION_PROFILE_PICTURE, ""); // Default to empty string if not found
+        Picasso.get().load(profile_url + profilePicture ).into(profile);
 
         //Chip Navigation
         chipNavigationBar.setOnItemSelectedListener(new ChipNavigationBar.OnItemSelectedListener() {
@@ -83,20 +91,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public void onTrimMemory(int level) {
-        super.onTrimMemory(level);
-        if (level == TRIM_MEMORY_UI_HIDDEN) {
-            // App is finishing
-            clearSharedPreferences();
-        }
-    }
-    private void clearSharedPreferences() {
-        SharedPreferences preferences = getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.clear();
-        editor.apply();
-    }
+//    @Override
+//    public void onTrimMemory(int level) {
+//        super.onTrimMemory(level);
+//        if (level == TRIM_MEMORY_UI_HIDDEN) {
+//            // App is finishing
+//            clearSharedPreferences();
+//        }
+//    }
+//    private void clearSharedPreferences() {
+//        SharedPreferences preferences = getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+//        SharedPreferences.Editor editor = preferences.edit();
+//        editor.clear();
+//        editor.apply();
+//    }
     // Handles the back button
     @Override
     public void onBackPressed() {

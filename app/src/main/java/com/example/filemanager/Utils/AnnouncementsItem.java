@@ -6,13 +6,15 @@ public class AnnouncementsItem {
     private String description;
     private String createdBy;
     private String date;
+    private String profile;
 
-    public AnnouncementsItem(int annId, String title, String description, String createdBy, String date){
+    public AnnouncementsItem(int annId, String title, String description, String createdBy, String date, String profile){
         this.title = title;
         this.annId = annId;
         this.description = description;
         this.createdBy = createdBy;
         this.date = date;
+        this.profile = profile;
 
     }
 
@@ -33,6 +35,9 @@ public class AnnouncementsItem {
 
     public int getAnnId(){
         return annId;
+    }
+    public String getProfile(){
+        return profile;
     }
 
 }
