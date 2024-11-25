@@ -51,7 +51,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
-            app:srcCompat="@drawable/profile" />
+            app:srcCompat="@drawable/profile"
+            android:background="?android:attr/selectableItemBackground"/>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -61,16 +62,30 @@
         android:layout_below="@+id/customActionBar"
         android:id="@+id/fragment_container">
     </FrameLayout>
-
-    <com.ismaeldivita.chipnavigation.ChipNavigationBar
-        android:id="@+id/chipNaviagation"
+<!--    <com.ismaeldivita.chipnavigation.ChipNavigationBar-->
+<!--        android:id="@+id/chipNaviagation"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="56dp"-->
+<!--        android:layout_alignParentBottom="true"-->
+<!--        app:cnb_menuResource="@menu/chipnav_menu"-->
+<!--        android:background="@drawable/white_bg"-->
+<!--        app:cnb_radius="50dp"-->
+<!--        app:cnb_unselectedColor="@color/black"-->
+<!--        android:padding="10dp"/>-->
+    <com.nafis.bottomnavigation.NafisBottomNavigation
+        android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        app:cnb_menuResource="@menu/chipnav_menu"
-        android:background="@drawable/white_bg"
-        app:cnb_radius="50dp"
-        app:cnb_unselectedColor="@color/black"
-        android:padding="10dp"/>
+        app:mbn_circleColor="#ffffff"
+        app:mbn_backgroundBottomColor="@color/purple"
+        app:mbn_countBackgroundColor="#ff6f00"
+        app:mbn_countTextColor="#ffffff"
+        app:mbn_countTypeface="fonts/SourceSansPro-Regular.ttf"
+        app:mbn_defaultIconColor="@color/white"
+        app:mbn_rippleColor="#2f424242"
+        app:mbn_selectedIconColor="#3c415e"
+        app:mbn_shadowColor="#1f212121"
+        app:mbn_hasAnimation="true" />
 
 </RelativeLayout>

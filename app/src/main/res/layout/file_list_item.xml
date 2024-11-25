@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:gravity="center"
     android:orientation="horizontal"
-    android:background="@drawable/items_border_light">
+    android:background="?android:attr/selectableItemBackground">
 
         <RelativeLayout
             android:id="@+id/back"
@@ -53,7 +53,8 @@
                 android:layout_height="wrap_content"
                 app:srcCompat="@drawable/baseline_more_vert_24"
                 android:layout_alignParentEnd="true"
-                android:padding="10dp"/>
+                android:padding="10dp"
+                android:background="?android:attr/selectableItemBackground"/>
         </RelativeLayout>
 
 </LinearLayout>

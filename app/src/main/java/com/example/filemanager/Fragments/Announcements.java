@@ -26,6 +26,7 @@ import org.json.JSONObject;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Announcements extends Fragment {
@@ -52,6 +53,7 @@ public class Announcements extends Fragment {
 
         queue = Volley.newRequestQueue(requireContext());
         announcementsList = new ArrayList<>();
+
         adapter = new AnnouncementsAdapter(announcementsList);
         recyclerView.setAdapter(adapter);
 
@@ -111,6 +113,7 @@ public class Announcements extends Fragment {
                         if (!announcementsList.equals(newAnnouncementsList)) {
                             announcementsList.clear();
                             announcementsList.addAll(newAnnouncementsList);
+                            Collections.reverse(announcementsList);
                             adapter.notifyDataSetChanged();
                         }
                     } catch (JSONException e) {

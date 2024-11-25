@@ -18,7 +18,11 @@ import com.example.filemanager.Tabs.ServerStorage;
 import com.example.filemanager.Fragments.ToDoList;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.ismaeldivita.chipnavigation.ChipNavigationBar;
+import com.nafis.bottomnavigation.NafisBottomNavigation;
 import com.squareup.picasso.Picasso;
+
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
     private ProgressDialog progressDialog;
     private ChipNavigationBar chipNavigationBar;
     private ShapeableImageView profile;
+
+    private NafisBottomNavigation bottomNavigation;
 
     private TextView title;
 
@@ -37,6 +43,11 @@ public class MainActivity extends AppCompatActivity {
 
     private String profile_url = "https://skcalamba.scarlet2.io/profile/";
 
+    private static final int ID_HOME = 1;
+    private static final int ID_FILES = 2;
+    private static final int ID_TODO = 3;
+    private static final int ID_TRASH = 4;
+
 
 //    TextView headerName, headerEmail, headerPosition;
 
@@ -45,33 +56,64 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        chipNavigationBar = findViewById(R.id.chipNaviagation);
+        bottomNavigation = findViewById(R.id.bottomNavigation);
+//        chipNavigationBar = findViewById(R.id.chipNaviagation);
         title = findViewById(R.id.title);
         profile = findViewById(R.id.shapeableImageView);
+
+        bottomNavigation.add(new NafisBottomNavigation.Model(ID_HOME, R.drawable.home));
+        bottomNavigation.add(new NafisBottomNavigation.Model(ID_FILES, R.drawable.folder));
+        bottomNavigation.add(new NafisBottomNavigation.Model(ID_TODO, R.drawable.todo));
+        bottomNavigation.add(new NafisBottomNavigation.Model(ID_TRASH, R.drawable.trash));
+
+        bottomNavigation.setOnClickMenuListener(new Function1<NafisBottomNavigation.Model, Unit>() {
+            @Override
+            public Unit invoke(NafisBottomNavigation.Model model) {
+                if (model.getId() == ID_HOME) {
+                    title.setText("SK Calamba");
+                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
+                } else if (model.getId() == ID_FILES) {
+                    title.setText("Files");
+                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Files()).commit();
+                } else if (model.getId() == ID_TODO) {
+                    title.setText("To Do");
+                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ToDoList()).commit();
+                } else if (model.getId() == ID_TRASH) {
+                    title.setText("Trash");
+                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Trash()).commit();
+                }
+
+                return null;
+            }
+        });
+        title.setText("SK Calamba");
+        bottomNavigation.show(ID_HOME, true);
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
+
 
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
         String profilePicture = sharedPreferences.getString(SESSION_PROFILE_PICTURE, ""); // Default to empty string if not found
         Picasso.get().load(profile_url + profilePicture ).into(profile);
 
-        //Chip Navigation
-        chipNavigationBar.setOnItemSelectedListener(new ChipNavigationBar.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(int itemId) {
-                if (itemId == R.id.nav_announcements) {
-                    title.setText("SK Calamba");
-                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
-                } else if (itemId == R.id.nav_files) {
-                    title.setText("Files");
-                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Files()).commit();
-                } else if (itemId == R.id.nav_todolist) {
-                    title.setText("To Do");
-                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ToDoList()).commit();
-                } else if (itemId == R.id.nav_trash) {
-                    title.setText("Trash");
-                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Trash()).commit();
-                }
-            }
-        });
+//        //Chip Navigation
+//        chipNavigationBar.setOnItemSelectedListener(new ChipNavigationBar.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(int itemId) {
+//                if (itemId == R.id.nav_announcements) {
+//                    title.setText("SK Calamba");
+//                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
+//                } else if (itemId == R.id.nav_files) {
+//                    title.setText("Files");
+//                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Files()).commit();
+//                } else if (itemId == R.id.nav_todolist) {
+//                    title.setText("To Do");
+//                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ToDoList()).commit();
+//                } else if (itemId == R.id.nav_trash) {
+//                    title.setText("Trash");
+//                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Trash()).commit();
+//                }
+//            }
+//        });
 
         profile.setOnClickListener(view -> {
             Intent intent = new Intent(this, Profile.class);
@@ -85,9 +127,11 @@ public class MainActivity extends AppCompatActivity {
         progressDialog.setCancelable(false);
 
         if (savedInstanceState == null) {
-
-            chipNavigationBar.setItemSelected(R.id.nav_announcements, true);
+            title.setText("SK Calamba");
+            bottomNavigation.show(ID_HOME, true);
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
+//            chipNavigationBar.setItemSelected(R.id.nav_announcements, true);
+//            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Announcements()).commit();
         }
     }
 
