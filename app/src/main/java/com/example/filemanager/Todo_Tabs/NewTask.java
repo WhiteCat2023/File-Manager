@@ -1,7 +1,9 @@
 package com.example.filemanager.Todo_Tabs;
 
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -30,6 +32,9 @@ import java.util.Locale;
 public class NewTask extends AppCompatActivity {
 
     final Calendar calendar = Calendar.getInstance();
+
+    private static final String SHARED_PREF_NAME = "session";
+    private static final String SESSION_TOKEN = "user_token";
 
     ImageView todoBack;
     EditText titleInput, descriptionInput;
@@ -96,6 +101,9 @@ public class NewTask extends AppCompatActivity {
         String startDateInput = this.startDateInput.getText().toString().trim();
         String endDateInput = this.endDateInput.getText().toString().trim();
 
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        String token = sharedPreferences.getString(SESSION_TOKEN, "");
+
         if (titleInput.isEmpty() || descriptionInput.isEmpty()){
             Toast.makeText(this, "Please enter a title and description", Toast.LENGTH_SHORT).show();
             return;
@@ -106,6 +114,8 @@ public class NewTask extends AppCompatActivity {
             jsonBody.put("description", descriptionInput);
             jsonBody.put("startDate", startDateInput);
             jsonBody.put("endDate", endDateInput);
+            jsonBody.put("type", "shared");
+            jsonBody.put("created_by", token);
         } catch (JSONException e) {
             Log.e("SharedTask", "JSON error: " + e.getMessage());
             Toast.makeText(this, "Error creating JSON", Toast.LENGTH_SHORT).show();
@@ -125,7 +135,7 @@ public class NewTask extends AppCompatActivity {
                         }
                     }catch (JSONException e){
                         Log.e("SharedTask", "JSON parsing error: " + e.getMessage());
-                        Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Creating task failed", Toast.LENGTH_SHORT).show();
                     }
                 },
                 error -> {
