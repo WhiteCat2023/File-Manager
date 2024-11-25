@@ -128,7 +128,8 @@ public class NewTask extends AppCompatActivity {
                         String status = jsonResponse.getString("status");
                         if (status.equals("success")){
                             Toast.makeText(this, "Task added", Toast.LENGTH_SHORT).show();
-                            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SharedTask()).commit();
+//                            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SharedTask()).commit();
+                            startActivity(new Intent(this, MainActivity.class));
                         } else {
                             String errorMessage = jsonResponse.optString("message", "Adding task failed");
                             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
