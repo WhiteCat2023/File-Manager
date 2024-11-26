@@ -62,16 +62,7 @@
         android:layout_below="@+id/customActionBar"
         android:id="@+id/fragment_container">
     </FrameLayout>
-<!--    <com.ismaeldivita.chipnavigation.ChipNavigationBar-->
-<!--        android:id="@+id/chipNaviagation"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="56dp"-->
-<!--        android:layout_alignParentBottom="true"-->
-<!--        app:cnb_menuResource="@menu/chipnav_menu"-->
-<!--        android:background="@drawable/white_bg"-->
-<!--        app:cnb_radius="50dp"-->
-<!--        app:cnb_unselectedColor="@color/black"-->
-<!--        android:padding="10dp"/>-->
+
     <com.nafis.bottomnavigation.NafisBottomNavigation
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"

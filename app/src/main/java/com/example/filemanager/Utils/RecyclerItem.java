@@ -27,7 +27,7 @@ public class RecyclerItem {
     //Getters
 
     public String getFileDate() {
-        return "Date: " + FileDate;
+        return FileDate;
     }
 
     public String getFileName() {
@@ -35,7 +35,7 @@ public class RecyclerItem {
     }
 
     public String getFileSize() {
-        return "Size: " + FileSize;
+        return FileSize;
     }
 
     public boolean isDirectory() {

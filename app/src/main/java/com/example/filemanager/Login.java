@@ -33,6 +33,8 @@ public class Login extends AppCompatActivity {
     private static final String SESSION_POSITION = "user_position";
     private static final String SESSION_NAME = "user_name";
     private static final String SESSION_PROFILE_PICTURE = "user_profile_picture";
+    private static final String KEY_IS_LOGGED_IN = "is_logged_in";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,6 +136,8 @@ public class Login extends AppCompatActivity {
         editor.putString(SESSION_POSITION, position);
         editor.putString(SESSION_NAME, name);
         editor.putString(SESSION_PROFILE_PICTURE, userProfilePicture);
+        editor.putBoolean(KEY_IS_LOGGED_IN, true);
+
         editor.apply();
     }
 

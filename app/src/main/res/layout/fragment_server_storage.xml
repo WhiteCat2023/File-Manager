@@ -29,7 +29,7 @@
        android:layout_width="match_parent"
        android:layout_height="wrap_content"
        android:paddingHorizontal="20dp"
-       android:background="@color/light_lavander">
+       android:background="@color/white">
       <LinearLayout
           android:id="@+id/breadcrumb_container_server"
           android:layout_width="wrap_content"

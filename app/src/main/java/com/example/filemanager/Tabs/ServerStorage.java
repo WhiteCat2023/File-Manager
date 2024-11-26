@@ -882,8 +882,12 @@ public class ServerStorage extends Fragment {
 
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
         String userToken = sharedPreferences.getString(SESSION_TOKEN, "0");
-
-        String path = MY_FOLDER_PATH + currentPath + "/" + fileName;
+        String path;
+        if(currentPath.length() == 0){
+            path = MY_FOLDER_PATH + fileName;
+        }else {
+            path = MY_FOLDER_PATH + currentPath + "/" + fileName;
+        }
         JSONObject itemParams = new JSONObject();
 
         try {

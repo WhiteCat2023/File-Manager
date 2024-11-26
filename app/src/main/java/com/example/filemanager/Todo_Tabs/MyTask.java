@@ -1,6 +1,8 @@
 package com.example.filemanager.Todo_Tabs;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -163,6 +165,9 @@ public class MyTask extends Fragment implements TodoListPersonalAdapter.OnDelete
 
     private static final String todoUrl = "https://skcalamba.scarlet2.io/android_api/todo/get_task_personal.php";
 
+    private static final String SESSION_TOKEN = "user_token";
+    private static final String SHARED_PREF_NAME = "session";
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -213,19 +218,26 @@ public class MyTask extends Fragment implements TodoListPersonalAdapter.OnDelete
                         todoListItemPersonal.clear();
                         // Parse the JSON response
                         for (int i = 0; i < response.length(); i++) {
+                            SharedPreferences sharedPreferences = requireContext().getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+                            String token = sharedPreferences.getString(SESSION_TOKEN, "");
                             JSONObject taskObject = response.getJSONObject(i);
-                            // Extract task details
-                            TodoListItemPersonal item = new TodoListItemPersonal(
-                                    taskObject.getInt("taskId"),
-                                    taskObject.getString("taskName"),
-                                    taskObject.getString("status"),
-                                    taskObject.getBoolean("isComplete"),
-                                    taskObject.getString("startDate"),
-                                    taskObject.getString("endDate"),
-                                    taskObject.getString("type"),
-                                    taskObject.getString("created_by")
-                            );
-                            todoListItemPersonal.add(item);
+
+                            if(taskObject.getString("created_by").equals(token)){
+                                // Extract task details
+                                TodoListItemPersonal item = new TodoListItemPersonal(
+                                        taskObject.getInt("taskId"),
+                                        taskObject.getString("taskName"),
+                                        taskObject.getString("status"),
+                                        taskObject.getBoolean("isComplete"),
+                                        taskObject.getString("startDate"),
+                                        taskObject.getString("endDate"),
+                                        taskObject.getString("type"),
+                                        taskObject.getString("created_by")
+                                );
+                                todoListItemPersonal.add(item);
+                            }
+
+
                         }
                         adapter.notifyDataSetChanged();
                         updateEmptyStateVisibility();
