@@ -51,6 +51,7 @@ dependencies {
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
 
+
     implementation 'androidx.databinding:databinding-runtime:8.7.2'
     implementation 'com.github.Foysalofficial:NafisBottomNav:5.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.61"
