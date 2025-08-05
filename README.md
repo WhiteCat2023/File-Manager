@@ -1,4 +1,4 @@
-# SK Cloud – Your Smart Companion for Seamless Access
+# SK Cloud (User-side) – Your Smart Companion for Seamless Access
 
 SK Cloud is the official Android application designed for end users to interact with the SK ecosystem—bringing powerful features, cloud connectivity, and personalized access right to your fingertips. Whether you're accessing your data, managing tasks, or receiving real-time updates, SK Cloud makes it easy, fast, and secure.
 
@@ -17,3 +17,4 @@ SK Cloud is the official Android application designed for end users to interact 
 Whether you're a barangay staff, employee, or registered user within the SK system, SK Cloud delivers a streamlined experience that keeps you connected and in control.
 
 <b>SK Cloud</b> – Simple. Secure. Smart.
+
